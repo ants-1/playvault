@@ -20,4 +20,57 @@ model User {
   name      String?
   password  String
   createdAt DateTime @default(now())
+  orders    Order[]
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  thumbnail   String?
+  products    Product[]
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  quantity    Int
+  price       Float
+  thumbnail   String?
+  images      String[]
+  createdAt   DateTime @default(now())
+
+  // Relations
+  categories Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryId Int?
+
+  orderDetails OrderDetail[]
+}
+
+model Order {
+  id              Int      @id @default(autoincrement())
+  customerId      Int
+  amount          Float
+  shippingAddress String
+  orderAddress    String
+  orderEmail      String
+  orderDate       DateTime @default(now())
+  orderStatus     String
+
+  // Relations
+  customer User          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  details  OrderDetail[]
+}
+
+model OrderDetail {
+  id        Int   @id @default(autoincrement())
+  orderId   Int
+  productId Int
+  price     Float
+  quantity  Int
+
+  // Relations
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
