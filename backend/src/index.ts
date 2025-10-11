@@ -1,41 +1,30 @@
-import express, { Request, Response } from "express";
-import { PrismaClient } from "../generated/prisma";
+import express from "express";
+import passport from "passport";
+import initialisePassport from "./passport/initialisePassport";
+import session from "express-session";
+import bodyParser from "body-parser";
 
 const app = express();
-const prisma = new PrismaClient();
 const PORT = process.env.PORT || 4000;
 
+initialisePassport();
+
+app.use(bodyParser.json());
 app.use(express.json());
-
-app.get("/", async (req: Request, res: Response) => {
-  try {
-    const userEmail = "test@example.com";
-    let user = await prisma.user.findUnique({
-      where: { email: userEmail },
-    });
-
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          email: userEmail,
-          name: "Test User",
-          password: "password123",
-        },
-      });
-    }
-
-    res.send(`
-      <h1>Test Page</h1>
-      <p>User ID: ${user.id}</p>
-      <p>Name: ${user.name}</p>
-      <p>Email: ${user.email}</p>
-      <p>Created At: ${user.createdAt}</p>
-    `);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Server error");
-  }
-});
+app.use(
+  session({
+    secret: process.env.TOKEN_SECRET_KEY!,
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 1000 * 60 * 60 * 24,
+    },
+  })
+);
+app.use(express.urlencoded({ extended: false }));
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.listen(PORT, () => {
   console.log(`Sever running on http://localhost:${PORT}`);
