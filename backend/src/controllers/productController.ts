@@ -101,7 +101,7 @@ export const deleteProduct = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid product ID." });
     }
 
-    productService.deleteProduct(id);
+    await productService.deleteProduct(id);
 
     res.status(200).json({
       message: "Product deleted.",
