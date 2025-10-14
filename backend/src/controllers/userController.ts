@@ -14,6 +14,11 @@ export const getUsers = async (req: Request, res: Response) => {
 export const getUser = async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
+
+    if (id == null) {
+      return res.status(400).json({ error: "Invalid user ID." });
+    }
+
     const user = await userService.getUser(id);
 
     res.status(200).json({ user });
@@ -25,6 +30,11 @@ export const getUser = async (req: Request, res: Response) => {
 export const updateUser = async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
+
+    if (id == null) {
+      return res.status(400).json({ error: "Invalid user ID." });
+    }
+
     const { name, email } = req.body;
 
     const updatedUser = await userService.updaterUser(id, name, email);
