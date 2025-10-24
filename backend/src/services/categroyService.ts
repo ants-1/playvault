@@ -1,12 +1,28 @@
 import { prisma } from "../lib/prisma";
 
-export const getCategories = async () => {
+export const getCategories = async (page: number = 1, limit: number = 10) => {
   try {
+    const skip = (page - 1) * limit;
+
     const categories = await prisma.category.findMany({
+      skip,
+      take: limit,
       include: { products: true },
+      orderBy: { id: "asc" },
     });
 
-    return categories;
+    const total = await prisma.category.count();
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: categories,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages,
+      }
+    };
   } catch (error: any) {
     console.error("Failed to fetch categories:", error);
     throw new Error("Failed to fetch categories.");

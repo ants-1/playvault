@@ -3,9 +3,13 @@ import { calculateOrderAmount } from "../utils/calculateOrderAmount";
 
 // amount should equal: all orderDetail product (price * quanity)
 
-export const getOrders = async () => {
+export const getOrders = async (page: number = 1, limit: number = 10) => {
   try {
+    const skip = (page - 1) * limit;
+
     const orders = await prisma.order.findMany({
+      skip,
+      take: limit,
       include: {
         customer: {
           select: {
@@ -18,18 +22,38 @@ export const getOrders = async () => {
           include: { product: true },
         },
       },
+      orderBy: { orderDate: "desc" },
     });
 
-    return orders;
+    const total = await prisma.order.count();
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: orders,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages,
+      },
+    };
   } catch (error: any) {
     console.error("Failed to fetch orders:", error);
     throw new Error("Failed to fetch orders.");
   }
 };
 
-export const getOrdersByCustomer = async (customerId: number) => {
+export const getOrdersByCustomer = async (
+  customerId: number,
+  page: number = 1,
+  limit: number
+) => {
   try {
+    const skip = (page - 1) * limit;
+
     const orders = await prisma.order.findMany({
+      skip,
+      take: limit,
       where: { customerId },
       include: {
         customer: {
@@ -46,7 +70,18 @@ export const getOrdersByCustomer = async (customerId: number) => {
       orderBy: { orderDate: "desc" },
     });
 
-    return orders;
+    const total = await prisma.order.count();
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: orders,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages,
+      },
+    };
   } catch (error: any) {
     console.error("Failed to fetch orders by customer:", error);
     throw new Error("Failed to fetch order by customer.");
@@ -135,7 +170,7 @@ export const updateOrder = async (
         shippingAddress,
         orderAddress,
       },
-            include: {
+      include: {
         customer: { select: { id: true, name: true, email: true } },
         details: { include: { product: true } },
       },

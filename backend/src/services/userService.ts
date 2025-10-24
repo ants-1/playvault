@@ -1,17 +1,33 @@
 import bcrypt from "bcrypt";
 import { prisma } from "../lib/prisma";
 
-export const getUsers = async () => {
+export const getUsers = async (page: number = 1, limit: number = 10) => {
   try {
+    const skip = (page - 1) * limit;
+
     const users = await prisma.user.findMany({
+      skip,
+      take: limit,
       omit: { password: true },
+      orderBy: { id: "asc"}
     });
 
     if (!users || users.length === 0) {
       throw new Error("No users found.");
     }
 
-    return users;
+    const total = await prisma.user.count();
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: users,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages,
+      }
+    };
   } catch (error: any) {
     console.error("Failed to fetch users:", error);
     throw new Error("Failed to fetch users.");

@@ -3,7 +3,16 @@ import * as orderService from "../services/orderService";
 
 export const getOrders = async (req: Request, res: Response) => {
   try {
-    const orders = await orderService.getOrders();
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+
+    if (page <= 0 || limit <= 0) {
+      return res
+        .status(400)
+        .json({ error: "Page and limit must be positive." });
+    }
+
+    const orders = await orderService.getOrders(page, limit);
 
     if (!orders) {
       res.status(404).json({ message: "No orders found." });
@@ -38,12 +47,24 @@ export const getOrderById = async (req: Request, res: Response) => {
 export const getOrdersByCustomer = async (req: Request, res: Response) => {
   try {
     const customerId = parseInt(req.params.customerId);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
 
     if (!customerId) {
       res.status(404).json({ error: "Customer ID not found." });
     }
 
-    const orders = await orderService.getOrdersByCustomer(customerId);
+    if (page <= 0 || limit <= 0) {
+      return res
+        .status(400)
+        .json({ error: "Page and limit must be positive." });
+    }
+
+    const orders = await orderService.getOrdersByCustomer(
+      customerId,
+      page,
+      limit
+    );
 
     res.status(200).json(orders);
   } catch (error: any) {

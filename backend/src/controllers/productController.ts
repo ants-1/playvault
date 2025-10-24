@@ -3,9 +3,18 @@ import * as productService from "../services/productService";
 
 export const getProducts = async (req: Request, res: Response) => {
   try {
-    const products = await productService.getProducts();
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
 
-    return res.status(200).json({ products });
+    if (page <= 0 || limit <= 0) {
+      return res
+        .status(400)
+        .json({ error: "Page and limit must be positive." });
+    }
+    
+    const products = await productService.getProducts(page, limit);
+
+    return res.status(200).json(products);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

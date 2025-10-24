@@ -3,9 +3,18 @@ import * as categoryService from "../services/categroyService";
 
 export const getCategories = async (req: Request, res: Response) => {
   try {
-    const categories = await categoryService.getCategories();
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
 
-    res.status(200).json({ categories });
+    if (page <= 0 || limit <= 0) {
+      return res
+        .status(400)
+        .json({ error: "Page and limit must be positive." });
+    }
+
+    const categories = await categoryService.getCategories(page, limit);
+
+    res.status(200).json(categories);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

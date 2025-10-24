@@ -3,9 +3,18 @@ import * as userService from "../services/userService";
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
-    const users = await userService.getUsers();
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) | 10;
 
-    return res.status(200).json({ users });
+    if (page <= 0 || limit <= 0) {
+      return res
+        .status(400)
+        .json({ error: "Page and limit must be positive." });
+    }
+
+    const users = await userService.getUsers(page, limit);
+
+    return res.status(200).json(users);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
