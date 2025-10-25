@@ -14,6 +14,10 @@ export const getCategories = async (req: Request, res: Response) => {
 
     const categories = await categoryService.getCategories(page, limit);
 
+    if (!categories) {
+      return res.status(404).json({ message: "No categories found." });
+    }
+
     res.status(200).json(categories);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -30,24 +34,41 @@ export const getCategory = async (req: Request, res: Response) => {
 
     const category = await categoryService.getCategory(id);
 
-    res.status(200).json({ category });
+    res.status(200).json({ data: category });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    if (error.name === "NotFoundError") {
+      return res.status(404).json({ error: error.message });
+    }
+
+    res.status(500).json({ error: "Internal server error." });
   }
 };
 
 export const addCategory = async (req: Request, res: Response) => {
   try {
     const { name, description, thumbnail } = req.body;
+
     const newCategory = await categoryService.addCategory(
       name,
       description,
       thumbnail
     );
 
-    res.status(201).json({ newCategory });
+    if (!newCategory) {
+      return res
+        .status(400)
+        .json({ error: "Error occured while creating category." });
+    }
+
+    res
+      .status(201)
+      .json({ message: "Category successfully created.", data: newCategory });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    if (error.name === "ConflictError") {
+      return res.status(409).json({ error: error.message });
+    }
+
+    res.status(500).json({ error: "Internal server error." });
   }
 };
 
@@ -70,9 +91,13 @@ export const updateCategory = async (req: Request, res: Response) => {
 
     res.status(200).json({
       message: "Category successfully updated.",
-      updateCategory,
+      data: updateCategory,
     });
   } catch (error: any) {
+    if (error.name === "ConflictError") {
+      return res.status(409).json({ error: error.message });
+    }
+
     res.status(500).json({ error: error.message });
   }
 };
@@ -91,6 +116,10 @@ export const deleteCategory = async (req: Request, res: Response) => {
       message: "Category deleted successfully.",
     });
   } catch (error: any) {
+    if (error.name === "NotFoundError") {
+      return res.status(404).json({ error: error.message });
+    }
+
     res.status(500).json({ error: error.message });
   }
 };

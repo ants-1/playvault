@@ -21,7 +21,7 @@ export const getCategories = async (page: number = 1, limit: number = 10) => {
         page,
         limit,
         totalPages,
-      }
+      },
     };
   } catch (error: any) {
     console.error("Failed to fetch categories:", error);
@@ -31,17 +31,19 @@ export const getCategories = async (page: number = 1, limit: number = 10) => {
 
 export const getCategory = async (id: number) => {
   try {
-    const category = await prisma.category.findUnique({
+    const category = await prisma.category.findUniqueOrThrow({
       where: { id },
       include: { products: true },
     });
 
-    if (!category) {
-      throw new Error("Category not found.");
-    }
-
     return category;
   } catch (error: any) {
+    if (error.code == "P2025" || error.code == "P2021") {
+      const notFoundError = new Error("Category not found.");
+      notFoundError.name = "NotFoundError";
+      throw notFoundError;
+    }
+
     console.error("Failed to fetch category:", error);
     throw new Error("Failed to fetch category.");
   }
@@ -63,6 +65,12 @@ export const addCategory = async (
 
     return newCategory;
   } catch (error: any) {
+    if (error.code === "P2002") {
+      const conflictError = new Error("Category name already exists.");
+      conflictError.name = "ConflictError";
+      throw conflictError;
+    }
+
     console.error("Failed to add category:", error);
     throw new Error("Failed to add category.");
   }
@@ -86,6 +94,18 @@ export const updateCategory = async (
 
     return updateCategory;
   } catch (error: any) {
+    if (error.code == "P2025" || error.code == "P2021") {
+      const notFoundError = new Error("Category not found.");
+      notFoundError.name = "NotFoundError";
+      throw notFoundError;
+    }
+
+    if (error.code === "P2002") {
+      const conflictError = new Error("Category name already exists.");
+      conflictError.name = "ConflictError";
+      throw conflictError;
+    }
+
     console.error("Failed to update category:", error);
     throw new Error("Failed to update category.");
   }
@@ -99,6 +119,12 @@ export const deleteCategory = async (id: number) => {
 
     return deletedCategory;
   } catch (error: any) {
+    if (error.code == "P2025" || error.code == "P2021") {
+      const notFoundError = new Error("Category not found.");
+      notFoundError.name = "NotFoundError";
+      throw notFoundError;
+    }
+
     console.error("Failed to delete category:", error);
     throw new Error("Failed to delete category.");
   }
