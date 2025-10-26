@@ -3,35 +3,63 @@ import { prisma } from "../lib/prisma";
 import { generateToken } from "../utils/generateToken";
 
 export const signUp = async (name: string, email: string, password: string) => {
-  const existingUser = await prisma.user.findUnique({
-    where: { email },
-  });
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  if (existingUser) throw new Error("Email already registered");
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+      },
+    });
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const newUser = await prisma.user.create({
-    data: {
-      name,
-      email,
-      password: hashedPassword,
-    },
-  });
+    const token = generateToken(newUser.id);
 
-  const token = generateToken(newUser.id);
-  return { user: newUser, token };
+    return { user: newUser, token };
+  } catch (error: any) {
+    if (error.code == "P2025" || error.code == "P2021") {
+      const notFoundError = new Error("User was not registered.");
+      notFoundError.name = "NotFoundError";
+      throw notFoundError;
+    }
+
+    if (error.code === "P2002") {
+      const conflictError = new Error("Email address already used.");
+      conflictError.name = "ConflictError";
+      throw conflictError;
+    }
+
+    console.error("Failed to register user", error);
+    throw new Error("Failed to register user.");
+  }
 };
 
 export const login = async (email: string, password: string) => {
-  const user = await prisma.user.findUnique({
-    where: { email },
-  });
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
 
-  if (!user) throw new Error("Invalid credentials");
+    if (!user) {
+      const authError = new Error("Invalid credentials.");
+      authError.name = "AuthenticationError";
+      throw authError;
+    }
 
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) throw new Error("Invalid credentials");
+    const isMatch = await bcrypt.compare(password, user.password);
 
-  const token = generateToken(user.id);
-  return { user, token };
+    if (!isMatch) {
+      const authError = new Error("Invalid passowrd.");
+      authError.name = "AuthenticationError";
+      throw authError;
+    }
+
+    const token = generateToken(user.id);
+
+    return { user, token };
+  } catch (error: any) {
+    console.error("Login failed:", error);
+    throw error;
+  }
 };

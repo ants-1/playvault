@@ -8,7 +8,15 @@ export const signUp = async (req: Request, res: Response) => {
 
     res.status(201).json({ message: "Sign-up successful", user, token });
   } catch (error: any) {
-    res.status(400).json({ error: error.message });
+    if (error.name === "ConflictError") {
+      return res.status(409).json({ error: error.message });
+    }
+
+    if (error.name === "NotFoundError") {
+      return res.status(404).json({ error: error.message });
+    }
+
+    res.status(500).json({ error: "Internal server error." });
   }
 };
 
@@ -19,6 +27,10 @@ export const login = async (req: Request, res: Response) => {
 
     res.status(200).json({ message: "Login successful", user, token });
   } catch (error: any) {
-    res.status(401).json({ error: error.message });
+    if (error.name === "AuthenticationError") {
+      return res.status(401).json({ error: error.message });
+    }
+
+    res.status(500).json({ error: "Internal server error." });
   }
 };
