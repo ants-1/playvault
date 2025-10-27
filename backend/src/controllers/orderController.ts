@@ -107,7 +107,7 @@ export const updateOrder = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
     const { orderStatus, shippingAddress, orderAddress } = req.body;
 
-    const updatedOrder = await orderService.updateOrder(
+    const updatedOrder = await orderService.updateOrderDetails(
       id,
       orderStatus,
       shippingAddress,

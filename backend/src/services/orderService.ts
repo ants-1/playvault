@@ -1,8 +1,6 @@
 import { prisma } from "../lib/prisma";
 import { calculateOrderAmount } from "../utils/calculateOrderAmount";
 
-// amount should equal: all orderDetail product (price * quanity)
-
 export const getOrders = async (page: number = 1, limit: number = 10) => {
   try {
     const skip = (page - 1) * limit;
@@ -90,7 +88,7 @@ export const getOrdersByCustomer = async (
 
 export const getOrderById = async (id: number) => {
   try {
-    const order = await prisma.order.findUnique({
+    const order = await prisma.order.findUniqueOrThrow({
       where: { id },
       include: {
         customer: {
@@ -108,6 +106,12 @@ export const getOrderById = async (id: number) => {
 
     return order;
   } catch (error: any) {
+    if (error.code == "P2025" || error.code == "P2021") {
+      const notFoundError = new Error("Order not found.");
+      notFoundError.name = "NotFoundError";
+      throw notFoundError;
+    }
+
     console.error("Failed to fetch orders by ID:", error);
     throw new Error("Failed to fetch order by ID.");
   }
@@ -151,12 +155,18 @@ export const createOrder = async (
     });
     return newOrder;
   } catch (error: any) {
+    if (error.code == "P2025" || error.code == "P2021") {
+      const notFoundError = new Error("Order not found.");
+      notFoundError.name = "NotFoundError";
+      throw notFoundError;
+    }
+
     console.error("Failed to create order:", error);
     throw new Error("Failed to create order.");
   }
 };
 
-export const updateOrder = async (
+export const updateOrderDetails = async (
   id: number,
   orderStatus?: string,
   shippingAddress?: string,
@@ -177,6 +187,12 @@ export const updateOrder = async (
     });
     return updatedOrder;
   } catch (error: any) {
+    if (error.code == "P2025" || error.code == "P2021") {
+      const notFoundError = new Error("Order not found.");
+      notFoundError.name = "NotFoundError";
+      throw notFoundError;
+    }
+
     console.error("Failed to update order:", error);
     throw new Error("Failed to update order.");
   }
@@ -190,6 +206,12 @@ export const deleteOrder = async (id: number) => {
 
     return deletedOrder;
   } catch (error: any) {
+    if (error.code == "P2025" || error.code == "P2021") {
+      const notFoundError = new Error("Order not found.");
+      notFoundError.name = "NotFoundError";
+      throw notFoundError;
+    }
+
     console.error("Failed to delete order:", error);
     throw new Error("Failed to delete order.");
   }
@@ -214,6 +236,12 @@ export const addProductsToOrder = async (
 
     return updatedOrder;
   } catch (error: any) {
+    if (error.code == "P2025" || error.code == "P2021") {
+      const notFoundError = new Error("Order not found.");
+      notFoundError.name = "NotFoundError";
+      throw notFoundError;
+    }
+
     console.error("Failed to add products to order:", error);
     throw new Error("Failed to add products to order.");
   }
@@ -232,6 +260,12 @@ export const updateOrderProduct = async (
 
     return updatedOrderDetails;
   } catch (error: any) {
+    if (error.code == "P2025" || error.code == "P2021") {
+      const notFoundError = new Error("Order not found.");
+      notFoundError.name = "NotFoundError";
+      throw notFoundError;
+    }
+
     console.error("Failed to update order product:", error);
     throw new Error("Failed to update order product.");
   }
@@ -255,6 +289,12 @@ export const deleteOrderProduct = async (
 
     return deletedOrderDetails;
   } catch (error: any) {
+    if (error.code == "P2025" || error.code == "P2021") {
+      const notFoundError = new Error("Order not found.");
+      notFoundError.name = "NotFoundError";
+      throw notFoundError;
+    }
+
     console.error("Failed to delete product from order:", error);
     throw new Error("Failed to delete product from order.");
   }

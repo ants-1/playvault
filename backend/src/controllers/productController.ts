@@ -11,12 +11,16 @@ export const getProducts = async (req: Request, res: Response) => {
         .status(400)
         .json({ error: "Page and limit must be positive." });
     }
-    
+
     const products = await productService.getProducts(page, limit);
+
+    if (!products) {
+      return res.status(404).json({ message: "No products found." });
+    }
 
     return res.status(200).json(products);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Internal server error." });
   }
 };
 
@@ -30,8 +34,12 @@ export const getProduct = async (req: Request, res: Response) => {
 
     const product = await productService.getProduct(id);
 
-    res.status(200).json({ product });
+    res.status(200).json({ data: product });
   } catch (error: any) {
+    if (error.name === "NotFoundError") {
+      return res.status(404).json({ error: error.message });
+    }
+
     res.status(500).json({ error: error.message });
   }
 };
@@ -48,7 +56,7 @@ export const addProduct = async (req: Request, res: Response) => {
       categoryId,
     } = req.body;
 
-    const result = await productService.addProduct(
+    const newProduct = await productService.addProduct(
       name,
       description,
       quantity,
@@ -58,7 +66,16 @@ export const addProduct = async (req: Request, res: Response) => {
       categoryId
     );
 
-    res.status(201).json({ result });
+    if (!newProduct) {
+      return res
+        .status(400)
+        .json({ error: "Error occured while creating a new product." });
+    }
+
+    if (!newProduct)
+      res
+        .status(201)
+        .json({ message: "Product successfully created.", data: newProduct });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -95,10 +112,14 @@ export const updateProduct = async (req: Request, res: Response) => {
 
     res.status(200).json({
       message: "Product updated successfully.",
-      product: updatedProduct,
+      data: updatedProduct,
     });
   } catch (error: any) {
-    res.status(400).json({ error: error.message });
+    if (error.name === "NotFoundError") {
+      return res.status(404).json({ error: error.message });
+    }
+
+    res.status(500).json({ error: "Internal server error." });
   }
 };
 
@@ -116,6 +137,10 @@ export const deleteProduct = async (req: Request, res: Response) => {
       message: "Product deleted.",
     });
   } catch (error: any) {
-    res.status(400).json({ error: error.message });
+    if (error.name === "NotFoundError") {
+      return res.status(404).json({ error: error.message });
+    }
+
+    res.status(500).json({ error: "Internal server error." });
   }
 };

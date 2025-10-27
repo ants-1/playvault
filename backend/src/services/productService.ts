@@ -8,7 +8,7 @@ export const getProducts = async (page: number = 1, limit: number = 10) => {
       skip,
       take: limit,
       include: { categories: true },
-      orderBy: { id: "asc"}
+      orderBy: { id: "asc" },
     });
 
     const total = await prisma.product.count();
@@ -21,7 +21,7 @@ export const getProducts = async (page: number = 1, limit: number = 10) => {
         page,
         limit,
         totalPages,
-      }
+      },
     };
   } catch (error: any) {
     console.error("Failed to fetch products:", error);
@@ -31,17 +31,19 @@ export const getProducts = async (page: number = 1, limit: number = 10) => {
 
 export const getProduct = async (id: number) => {
   try {
-    const product = await prisma.product.findUnique({
+    const product = await prisma.product.findUniqueOrThrow({
       where: { id },
       include: { categories: true },
     });
 
-    if (!product) {
-      throw new Error("Product not found.");
-    }
-
     return product;
   } catch (error: any) {
+    if (error.code == "P2025" || error.code == "P2021") {
+      const notFoundError = new Error("Product not found.");
+      notFoundError.name = "NotFoundError";
+      throw notFoundError;
+    }
+
     console.error("Failed to fetch product:", error);
     throw new Error("Failed to fetch product.");
   }
@@ -104,6 +106,12 @@ export const updateProduct = async (
 
     return updatedProduct;
   } catch (error: any) {
+    if (error.code == "P2025" || error.code == "P2021") {
+      const notFoundError = new Error("Product not found.");
+      notFoundError.name = "NotFoundError";
+      throw notFoundError;
+    }
+
     console.error("Failed to update product:", error);
     throw new Error("Failed to update product.");
   }
@@ -117,6 +125,12 @@ export const deleteProduct = async (id: number) => {
 
     return deletedProduct;
   } catch (error: any) {
+    if (error.code == "P2025" || error.code == "P2021") {
+      const notFoundError = new Error("Product not found.");
+      notFoundError.name = "NotFoundError";
+      throw notFoundError;
+    }
+
     console.error("Failed to delete product:", error);
     throw new Error("Failed to delete product.");
   }
