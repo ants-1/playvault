@@ -1,11 +1,11 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { signUp, login } from "../../src/services/authService";
-import { prisma } from "../../src/lib/prisma";
+import { signUp, login } from "../../services/authService";
+import { prisma } from "../../lib/prisma";
 import bcrypt from "bcrypt";
 
-jest.mock("../../src/lib/prisma", () => ({
+jest.mock("../../lib/prisma", () => ({
   prisma: {
     user: {
       create: jest.fn(),

@@ -1,7 +1,7 @@
-import { prisma } from "../../src/lib/prisma";
-import * as categoryService from "../../src/services/categoryService";
+import { prisma } from "../../lib/prisma";
+import * as categoryService from "../../services/categoryService";
 
-jest.mock("../../src/lib/prisma", () => ({
+jest.mock("../../lib/prisma", () => ({
   prisma: {
     category: {
       findMany: jest.fn(),

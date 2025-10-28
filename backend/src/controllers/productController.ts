@@ -71,13 +71,12 @@ export const addProduct = async (req: Request, res: Response) => {
     if (!newProduct) {
       return res
         .status(400)
-        .json({ error: "Error occured while creating a new product." });
+        .json({ error: "Error occurred while creating a new product." });
     }
 
-    if (!newProduct)
-      res
-        .status(201)
-        .json({ message: "Product successfully created.", data: newProduct });
+    res
+      .status(201)
+      .json({ message: "Product successfully created.", data: newProduct });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

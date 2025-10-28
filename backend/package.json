@@ -9,7 +9,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "ts-node src/lib/seed.ts",
-    "test": "jest --verbose --runInBand"
+    "test": "jest --config jest.config.js --verbose --runInBand"
   },
   "keywords": [],
   "author": "",

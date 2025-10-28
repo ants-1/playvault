@@ -1,11 +1,11 @@
 import request from "supertest";
 import express, { json } from "express";
-import userRoutes from "../../src/routes/userRoutes";
-import * as userService from "../../src/services/userService";
+import userRoutes from "../../routes/userRoutes";
+import * as userService from "../../services/userService";
 
-jest.mock("../../src/services/userService");
+jest.mock("../../services/userService");
 
-jest.mock("../../src/middlewares/authenticateJWT", () => ({
+jest.mock("../../middlewares/authenticateJWT", () => ({
   authenticateJWT: (req: any, res: any, next: any) => next(),
 }));
 

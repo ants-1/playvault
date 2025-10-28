@@ -8,15 +8,17 @@ module.exports = {
   transform: {
     ...tsJestTransformCfg,
   },
-  roots: ["<rootDir>/src", "<rootDir>/tests"],
-  testMatch: ["**/?(*.)+(spec|test).[tj]s?(x)"],
+  roots: ["<rootDir>/src"],
+  testMatch: ["**/tests/**/*.test.ts"],
+  globals: {
+    "ts-jest": {
+      tsconfig: "tsconfig.json",
+    },
+  },
   moduleFileExtensions: ["ts", "js", "json", "node"],
   clearMocks: true,
   collectCoverage: true,
-  coveragePathIgnorePatterns: [
-    "/node_modules/",
-    "/generated/",
-    "/dist/",
-  ],
+  coveragePathIgnorePatterns: ["/node_modules/", "/generated/", "/dist/"],
   coverageDirectory: "coverage",
+  
 };

@@ -1,11 +1,11 @@
 import bcrypt from "bcrypt";
-import { prisma } from "../../src/lib/prisma";
-import * as userService from "../../src/services/userService";
-import { User } from "../../generated/prisma";
+import { prisma } from "../../lib/prisma";
+import * as userService from "../../services/userService";
+import { User } from "../../../generated/prisma";
 import dotenv from "dotenv";
 dotenv.config();
 
-jest.mock("../../src/lib/prisma", () => ({
+jest.mock("../../lib/prisma", () => ({
   prisma: {
     user: {
       findMany: jest.fn(),

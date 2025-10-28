@@ -1,9 +1,9 @@
 import request from "supertest";
 import express, { json } from "express";
-import * as categoryService from "../../src/services/categoryService";
-import categoryRoutes from "../../src/routes/categoryRoutes";
+import * as categoryService from "../../services/categoryService";
+import categoryRoutes from "../../routes/categoryRoutes";
 
-jest.mock("../../src/services/categoryService");
+jest.mock("../../services/categoryService");
 
 const app = express();
 app.use(json());
