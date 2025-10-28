@@ -22,7 +22,7 @@ export const getOrders = async (req: Request, res: Response) => {
 
     res.status(200).json(orders);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Internal server error." });
   }
 };
 
@@ -42,7 +42,11 @@ export const getOrderById = async (req: Request, res: Response) => {
 
     res.status(200).json(order);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    if (error.name === "NotFoundError") {
+      return res.status(404).json({ message: error.message });
+    }
+
+    res.status(500).json({ error: "Internal server error." });
   }
 };
 
@@ -70,7 +74,7 @@ export const getOrdersByCustomer = async (req: Request, res: Response) => {
 
     res.status(200).json(orders);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Internal server error." });
   }
 };
 
@@ -100,7 +104,7 @@ export const createOrder = async (req: Request, res: Response) => {
 
     res.status(201).json(newOrder);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Internal server error." });
   }
 };
 
@@ -118,7 +122,7 @@ export const updateOrder = async (req: Request, res: Response) => {
 
     res.status(200).json(updatedOrder);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Internal server error." });
   }
 };
 
@@ -130,7 +134,11 @@ export const deleteOrder = async (req: Request, res: Response) => {
       .status(200)
       .json({ message: "Order deleted successfully", deletedOrder });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    if (error.name === "NotFoundError") {
+      return res.status(404).json({ error: error.message });
+    }
+
+    res.status(500).json({ error: "Internal server error." });
   }
 };
 
@@ -145,7 +153,7 @@ export const addProductsToOrder = async (req: Request, res: Response) => {
     );
     res.status(200).json(updatedOrder);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Internal server error." });
   }
 };
 
@@ -160,7 +168,11 @@ export const updateOrderProduct = async (req: Request, res: Response) => {
     );
     res.status(200).json(updatedDetail);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    if (error.name === "NotFoundError") {
+      return res.status(404).json({ error: error.message });
+    }
+
+    res.status(500).json({ error: "Internal server error." });
   }
 };
 
@@ -173,10 +185,17 @@ export const deleteOrderProduct = async (req: Request, res: Response) => {
       orderId,
       productId
     );
-    res
-      .status(200)
-      .json({ message: "Product removed from order", deletedDetail });
+
+    res.status(200).json({
+      message: "Product removed from order",
+      deletedDetail,
+    });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    if (error.name === "NotFoundError") {
+      return res.status(404).json({ error: error.message });
+    }
+
+    res.status(500).json({ error: "Internal server error." });
   }
 };
+

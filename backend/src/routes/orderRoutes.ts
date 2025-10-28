@@ -23,10 +23,13 @@ router.post(
   validateAddProductsToOrder,
   orderController.addProductsToOrder
 );
-router.put("/products/:orderDetailId", orderController.updateOrderProduct);
+router.put(
+  "/products/:orderDetailId",
+  validateUpdateOrderProduct,
+  orderController.updateOrderProduct
+);
 router.delete(
   "/:orderId/products/:productId",
-  validateUpdateOrderProduct,
   orderController.deleteOrderProduct
 );
 

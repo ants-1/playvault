@@ -284,19 +284,29 @@ export const deleteOrderProduct = async (
       },
     });
 
+    // Throw NotFoundError if no matching product found
     if (deletedOrderDetails.count === 0) {
-      throw new Error("No matching product found in this order.");
+      const error = new Error("No matching product found in this order.");
+      error.name = "NotFoundError";
+      throw error;
     }
 
     return deletedOrderDetails;
   } catch (error: any) {
-    if (error.code == "P2025" || error.code == "P2021") {
-      const notFoundError: Error = new Error("Order not found.");
+    // Prisma record not found
+    if (error.code === "P2025" || error.code === "P2021") {
+      const notFoundError = new Error("Order not found.");
       notFoundError.name = "NotFoundError";
       throw notFoundError;
+    }
+
+    // Already a NotFoundError
+    if (error.name === "NotFoundError") {
+      throw error;
     }
 
     console.error("Failed to delete product from order:", error);
     throw new Error("Failed to delete product from order.");
   }
 };
+
