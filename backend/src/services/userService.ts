@@ -112,7 +112,11 @@ export const updateUserPassword = async (
 
     return { message: "Password updated successfully." };
   } catch (error: any) {
-    if (error.code == "P2025" || error.code == "P2021") {
+    if (error.name === "AuthenticationError" || error.name === "NotFoundError") {
+      throw error;
+    }
+
+    if (error.code === "P2025" || error.code === "P2021") {
       const notFoundError: Error = new Error("User not found.");
       notFoundError.name = "NotFoundError";
       throw notFoundError;
@@ -122,3 +126,4 @@ export const updateUserPassword = async (
     throw new Error("Failed to update password.");
   }
 };
+

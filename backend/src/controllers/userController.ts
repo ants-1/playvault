@@ -18,7 +18,7 @@ export const getUsers = async (req: Request, res: Response) => {
 
     return res.status(200).json(users);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Internal server error." });
   }
 };
 
@@ -32,13 +32,13 @@ export const getUser = async (req: Request, res: Response) => {
 
     const user: Omit<User, "password"> = await userService.getUser(id);
 
-    res.status(200).json({ user });
+    res.status(200).json({ data: user });
   } catch (error: any) {
     if (error.name === "NotFoundError") {
       return res.status(404).json({ error: error.message });
     }
 
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Internal server error." });
   }
 };
 
@@ -59,7 +59,7 @@ export const updateUser = async (req: Request, res: Response) => {
     );
 
     res.status(200).json({
-      message: "User information has been successfully updated.",
+      message: "User updated successfully",
       data: updatedUser,
     });
   } catch (error: any) {
@@ -86,8 +86,15 @@ export const updateUserPassword = async (req: Request, res: Response) => {
       newPassword
     );
 
-    res.status(200).json({ result });
+    res.status(200).json(result);
   } catch (error: any) {
-    res.status(400).json({ error: error.message });
+    if (error.name === "AuthenticationError") {
+      return res.status(401).json({ error: error.message });
+    }
+    if (error.name === "NotFoundError") {
+      return res.status(404).json({ error: error.message });
+    }
+
+    res.status(500).json({ error: "Internal server error." });
   }
 };
