@@ -3,10 +3,8 @@ import express, { json } from "express";
 import userRoutes from "../../src/routes/userRoutes";
 import * as userService from "../../src/services/userService";
 
-// Mock the userService
 jest.mock("../../src/services/userService");
 
-// Mock JWT middleware to bypass authentication
 jest.mock("../../src/middlewares/authenticateJWT", () => ({
   authenticateJWT: (req: any, res: any, next: any) => next(),
 }));

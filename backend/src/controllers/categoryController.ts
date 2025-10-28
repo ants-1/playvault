@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import * as categoryService from "../services/categroyService";
+import * as categoryService from "../services/categoryService";
 import { Category } from "../../generated/prisma";
 import { Categories } from "../types/Category";
 

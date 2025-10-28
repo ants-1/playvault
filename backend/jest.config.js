@@ -13,5 +13,10 @@ module.exports = {
   moduleFileExtensions: ["ts", "js", "json", "node"],
   clearMocks: true,
   collectCoverage: true,
+  coveragePathIgnorePatterns: [
+    "/node_modules/",
+    "/generated/",
+    "/dist/",
+  ],
   coverageDirectory: "coverage",
 };
