@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
 import * as categoryService from "../services/categroyService";
+import { Category } from "../../generated/prisma";
+import { Categories } from "../types/Category";
 
 export const getCategories = async (req: Request, res: Response) => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    const page: number = parseInt(req.query.page as string) || 1;
+    const limit: number = parseInt(req.query.limit as string) || 10;
 
     if (page <= 0 || limit <= 0) {
       return res
@@ -12,7 +14,10 @@ export const getCategories = async (req: Request, res: Response) => {
         .json({ error: "Page and limit must be positive." });
     }
 
-    const categories = await categoryService.getCategories(page, limit);
+    const categories: Categories = await categoryService.getCategories(
+      page,
+      limit
+    );
 
     if (!categories) {
       return res.status(404).json({ message: "No categories found." });
@@ -20,19 +25,19 @@ export const getCategories = async (req: Request, res: Response) => {
 
     res.status(200).json(categories);
   } catch (error: any) {
-    res.status(500).json({ error: "Internal server error."});
+    res.status(500).json({ error: "Internal server error." });
   }
 };
 
 export const getCategory = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id: number = parseInt(req.params.id);
 
     if (id == null) {
       return res.status(400).json({ error: "Invalid category ID." });
     }
 
-    const category = await categoryService.getCategory(id);
+    const category: Category = await categoryService.getCategory(id);
 
     res.status(200).json({ data: category });
   } catch (error: any) {
@@ -48,7 +53,7 @@ export const addCategory = async (req: Request, res: Response) => {
   try {
     const { name, description, thumbnail } = req.body;
 
-    const newCategory = await categoryService.addCategory(
+    const newCategory: Category = await categoryService.addCategory(
       name,
       description,
       thumbnail
@@ -74,7 +79,7 @@ export const addCategory = async (req: Request, res: Response) => {
 
 export const updateCategory = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id: number = parseInt(req.params.id);
 
     if (id == null) {
       return res.status(400).json({ error: "Invalid category ID." });
@@ -82,7 +87,7 @@ export const updateCategory = async (req: Request, res: Response) => {
 
     const { name, description, thumbnail } = req.body;
 
-    const updateCategory = await categoryService.updateCategory(
+    const updateCategory: Category = await categoryService.updateCategory(
       id,
       name,
       description,
@@ -108,7 +113,7 @@ export const updateCategory = async (req: Request, res: Response) => {
 
 export const deleteCategory = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id: number = parseInt(req.params.id);
 
     if (id == null) {
       return res.status(400).json({ error: "Invalid category ID." });

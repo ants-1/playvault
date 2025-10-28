@@ -1,11 +1,12 @@
+import { Order, OrderDetail } from "../../generated/prisma";
 import { prisma } from "../lib/prisma";
 import { calculateOrderAmount } from "../utils/calculateOrderAmount";
 
 export const getOrders = async (page: number = 1, limit: number = 10) => {
   try {
-    const skip = (page - 1) * limit;
+    const skip: number = (page - 1) * limit;
 
-    const orders = await prisma.order.findMany({
+    const orders: Order[] = await prisma.order.findMany({
       skip,
       take: limit,
       include: {
@@ -23,8 +24,8 @@ export const getOrders = async (page: number = 1, limit: number = 10) => {
       orderBy: { orderDate: "desc" },
     });
 
-    const total = await prisma.order.count();
-    const totalPages = Math.ceil(total / limit);
+    const total: number = await prisma.order.count();
+    const totalPages: number = Math.ceil(total / limit);
 
     return {
       data: orders,
@@ -47,9 +48,9 @@ export const getOrdersByCustomer = async (
   limit: number
 ) => {
   try {
-    const skip = (page - 1) * limit;
+    const skip: number = (page - 1) * limit;
 
-    const orders = await prisma.order.findMany({
+    const orders: Order[] = await prisma.order.findMany({
       skip,
       take: limit,
       where: { customerId },
@@ -68,8 +69,8 @@ export const getOrdersByCustomer = async (
       orderBy: { orderDate: "desc" },
     });
 
-    const total = await prisma.order.count();
-    const totalPages = Math.ceil(total / limit);
+    const total: number = await prisma.order.count();
+    const totalPages: number = Math.ceil(total / limit);
 
     return {
       data: orders,
@@ -88,7 +89,7 @@ export const getOrdersByCustomer = async (
 
 export const getOrderById = async (id: number) => {
   try {
-    const order = await prisma.order.findUniqueOrThrow({
+    const order: Order = await prisma.order.findUniqueOrThrow({
       where: { id },
       include: {
         customer: {
@@ -107,7 +108,7 @@ export const getOrderById = async (id: number) => {
     return order;
   } catch (error: any) {
     if (error.code == "P2025" || error.code == "P2021") {
-      const notFoundError = new Error("Order not found.");
+      const notFoundError: Error = new Error("Order not found.");
       notFoundError.name = "NotFoundError";
       throw notFoundError;
     }
@@ -126,9 +127,9 @@ export const createOrder = async (
   orderDetails: { productId: number; price: number; quantity: number }[]
 ) => {
   try {
-    const amount = calculateOrderAmount(orderDetails) | 0;
+    const amount: number = calculateOrderAmount(orderDetails) | 0;
 
-    const newOrder = await prisma.order.create({
+    const newOrder: Order = await prisma.order.create({
       data: {
         customerId,
         amount,
@@ -156,7 +157,7 @@ export const createOrder = async (
     return newOrder;
   } catch (error: any) {
     if (error.code == "P2025" || error.code == "P2021") {
-      const notFoundError = new Error("Order not found.");
+      const notFoundError: Error = new Error("Order not found.");
       notFoundError.name = "NotFoundError";
       throw notFoundError;
     }
@@ -173,7 +174,7 @@ export const updateOrderDetails = async (
   orderAddress?: string
 ) => {
   try {
-    const updatedOrder = await prisma.order.update({
+    const updatedOrder: Order = await prisma.order.update({
       where: { id },
       data: {
         orderStatus,
@@ -188,7 +189,7 @@ export const updateOrderDetails = async (
     return updatedOrder;
   } catch (error: any) {
     if (error.code == "P2025" || error.code == "P2021") {
-      const notFoundError = new Error("Order not found.");
+      const notFoundError: Error = new Error("Order not found.");
       notFoundError.name = "NotFoundError";
       throw notFoundError;
     }
@@ -200,14 +201,14 @@ export const updateOrderDetails = async (
 
 export const deleteOrder = async (id: number) => {
   try {
-    const deletedOrder = await prisma.order.delete({
+    const deletedOrder: Order = await prisma.order.delete({
       where: { id },
     });
 
     return deletedOrder;
   } catch (error: any) {
     if (error.code == "P2025" || error.code == "P2021") {
-      const notFoundError = new Error("Order not found.");
+      const notFoundError: Error = new Error("Order not found.");
       notFoundError.name = "NotFoundError";
       throw notFoundError;
     }
@@ -222,7 +223,7 @@ export const addProductsToOrder = async (
   products: { productId: number; price: number; quantity: number }[]
 ) => {
   try {
-    const updatedOrder = await prisma.order.update({
+    const updatedOrder: Order = await prisma.order.update({
       where: { id: orderId },
       data: {
         details: {
@@ -237,7 +238,7 @@ export const addProductsToOrder = async (
     return updatedOrder;
   } catch (error: any) {
     if (error.code == "P2025" || error.code == "P2021") {
-      const notFoundError = new Error("Order not found.");
+      const notFoundError: Error = new Error("Order not found.");
       notFoundError.name = "NotFoundError";
       throw notFoundError;
     }
@@ -252,7 +253,7 @@ export const updateOrderProduct = async (
   updates: { price?: number; quantity?: number }
 ) => {
   try {
-    const updatedOrderDetails = await prisma.orderDetail.update({
+    const updatedOrderDetails: OrderDetail = await prisma.orderDetail.update({
       where: { id: orderDetailId },
       data: updates,
       include: { product: true, order: true },
@@ -261,7 +262,7 @@ export const updateOrderProduct = async (
     return updatedOrderDetails;
   } catch (error: any) {
     if (error.code == "P2025" || error.code == "P2021") {
-      const notFoundError = new Error("Order not found.");
+      const notFoundError: Error = new Error("Order not found.");
       notFoundError.name = "NotFoundError";
       throw notFoundError;
     }
@@ -290,7 +291,7 @@ export const deleteOrderProduct = async (
     return deletedOrderDetails;
   } catch (error: any) {
     if (error.code == "P2025" || error.code == "P2021") {
-      const notFoundError = new Error("Order not found.");
+      const notFoundError: Error = new Error("Order not found.");
       notFoundError.name = "NotFoundError";
       throw notFoundError;
     }

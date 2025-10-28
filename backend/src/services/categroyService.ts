@@ -1,18 +1,19 @@
+import { Category } from "../../generated/prisma";
 import { prisma } from "../lib/prisma";
 
 export const getCategories = async (page: number = 1, limit: number = 10) => {
   try {
-    const skip = (page - 1) * limit;
+    const skip: number = (page - 1) * limit;
 
-    const categories = await prisma.category.findMany({
+    const categories: Category[] = await prisma.category.findMany({
       skip,
       take: limit,
       include: { products: true },
       orderBy: { id: "asc" },
     });
 
-    const total = await prisma.category.count();
-    const totalPages = Math.ceil(total / limit);
+    const total: number = await prisma.category.count();
+    const totalPages: number = Math.ceil(total / limit);
 
     return {
       data: categories,
@@ -31,7 +32,7 @@ export const getCategories = async (page: number = 1, limit: number = 10) => {
 
 export const getCategory = async (id: number) => {
   try {
-    const category = await prisma.category.findUniqueOrThrow({
+    const category: Category = await prisma.category.findUniqueOrThrow({
       where: { id },
       include: { products: true },
     });
@@ -39,7 +40,7 @@ export const getCategory = async (id: number) => {
     return category;
   } catch (error: any) {
     if (error.code == "P2025" || error.code == "P2021") {
-      const notFoundError = new Error("Category not found.");
+      const notFoundError: Error = new Error("Category not found.");
       notFoundError.name = "NotFoundError";
       throw notFoundError;
     }
@@ -55,7 +56,7 @@ export const addCategory = async (
   thumbnail: string
 ) => {
   try {
-    const newCategory = await prisma.category.create({
+    const newCategory: Category = await prisma.category.create({
       data: {
         name,
         description,
@@ -66,7 +67,7 @@ export const addCategory = async (
     return newCategory;
   } catch (error: any) {
     if (error.code === "P2002") {
-      const conflictError = new Error("Category name already exists.");
+      const conflictError: Error = new Error("Category name already exists.");
       conflictError.name = "ConflictError";
       throw conflictError;
     }
@@ -83,7 +84,7 @@ export const updateCategory = async (
   thumbnail?: string
 ) => {
   try {
-    const updateCategory = await prisma.category.update({
+    const updateCategory: Category = await prisma.category.update({
       where: { id },
       data: {
         name,
@@ -95,13 +96,13 @@ export const updateCategory = async (
     return updateCategory;
   } catch (error: any) {
     if (error.code == "P2025" || error.code == "P2021") {
-      const notFoundError = new Error("Category not found.");
+      const notFoundError: Error = new Error("Category not found.");
       notFoundError.name = "NotFoundError";
       throw notFoundError;
     }
 
     if (error.code === "P2002") {
-      const conflictError = new Error("Category name already exists.");
+      const conflictError: Error = new Error("Category name already exists.");
       conflictError.name = "ConflictError";
       throw conflictError;
     }
@@ -113,14 +114,14 @@ export const updateCategory = async (
 
 export const deleteCategory = async (id: number) => {
   try {
-    const deletedCategory = await prisma.category.delete({
+    const deletedCategory: Category = await prisma.category.delete({
       where: { id },
     });
 
     return deletedCategory;
   } catch (error: any) {
     if (error.code == "P2025" || error.code == "P2021") {
-      const notFoundError = new Error("Category not found.");
+      const notFoundError: Error = new Error("Category not found.");
       notFoundError.name = "NotFoundError";
       throw notFoundError;
     }

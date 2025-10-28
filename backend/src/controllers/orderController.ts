@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
 import * as orderService from "../services/orderService";
+import { Orders } from "../types/Order";
+import { Order, OrderDetail } from "../../generated/prisma";
 
 export const getOrders = async (req: Request, res: Response) => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    const page: number = parseInt(req.query.page as string) || 1;
+    const limit: number = parseInt(req.query.limit as string) || 10;
 
     if (page <= 0 || limit <= 0) {
       return res
@@ -12,7 +14,7 @@ export const getOrders = async (req: Request, res: Response) => {
         .json({ error: "Page and limit must be positive." });
     }
 
-    const orders = await orderService.getOrders(page, limit);
+    const orders: Orders = await orderService.getOrders(page, limit);
 
     if (!orders) {
       res.status(404).json({ message: "No orders found." });
@@ -26,13 +28,13 @@ export const getOrders = async (req: Request, res: Response) => {
 
 export const getOrderById = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id: number = parseInt(req.params.id);
 
     if (!id) {
       res.status(404).json({ error: "Order ID not found." });
     }
 
-    const order = await orderService.getOrderById(id);
+    const order: Order = await orderService.getOrderById(id);
 
     if (!order) {
       return res.status(404).json({ message: "Order not found." });
@@ -46,9 +48,9 @@ export const getOrderById = async (req: Request, res: Response) => {
 
 export const getOrdersByCustomer = async (req: Request, res: Response) => {
   try {
-    const customerId = parseInt(req.params.customerId);
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    const customerId: number = parseInt(req.params.customerId);
+    const page: number = parseInt(req.query.page as string) || 1;
+    const limit: number = parseInt(req.query.limit as string) || 10;
 
     if (!customerId) {
       res.status(404).json({ error: "Customer ID not found." });
@@ -60,7 +62,7 @@ export const getOrdersByCustomer = async (req: Request, res: Response) => {
         .json({ error: "Page and limit must be positive." });
     }
 
-    const orders = await orderService.getOrdersByCustomer(
+    const orders: Orders = await orderService.getOrdersByCustomer(
       customerId,
       page,
       limit
@@ -83,7 +85,7 @@ export const createOrder = async (req: Request, res: Response) => {
       orderDetails,
     } = req.body;
 
-    const newOrder = await orderService.createOrder(
+    const newOrder: Order = await orderService.createOrder(
       customerId,
       shippingAddress,
       orderAddress,
@@ -104,10 +106,10 @@ export const createOrder = async (req: Request, res: Response) => {
 
 export const updateOrder = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id: number = parseInt(req.params.id);
     const { orderStatus, shippingAddress, orderAddress } = req.body;
 
-    const updatedOrder = await orderService.updateOrderDetails(
+    const updatedOrder: Order = await orderService.updateOrderDetails(
       id,
       orderStatus,
       shippingAddress,
@@ -122,7 +124,7 @@ export const updateOrder = async (req: Request, res: Response) => {
 
 export const deleteOrder = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id: number = parseInt(req.params.id);
     const deletedOrder = await orderService.deleteOrder(id);
     res
       .status(200)
@@ -134,10 +136,10 @@ export const deleteOrder = async (req: Request, res: Response) => {
 
 export const addProductsToOrder = async (req: Request, res: Response) => {
   try {
-    const orderId = parseInt(req.params.orderId);
+    const orderId: number = parseInt(req.params.orderId);
     const { products } = req.body;
 
-    const updatedOrder = await orderService.addProductsToOrder(
+    const updatedOrder: Order = await orderService.addProductsToOrder(
       orderId,
       products
     );
@@ -149,10 +151,10 @@ export const addProductsToOrder = async (req: Request, res: Response) => {
 
 export const updateOrderProduct = async (req: Request, res: Response) => {
   try {
-    const orderDetailId = parseInt(req.params.orderDetailId);
-    const updates = req.body;
+    const orderDetailId: number = parseInt(req.params.orderDetailId);
+    const updates: OrderDetail = req.body;
 
-    const updatedDetail = await orderService.updateOrderProduct(
+    const updatedDetail: OrderDetail = await orderService.updateOrderProduct(
       orderDetailId,
       updates
     );
@@ -164,8 +166,8 @@ export const updateOrderProduct = async (req: Request, res: Response) => {
 
 export const deleteOrderProduct = async (req: Request, res: Response) => {
   try {
-    const orderId = parseInt(req.params.orderId);
-    const productId = parseInt(req.params.productId);
+    const orderId: number = parseInt(req.params.orderId);
+    const productId: number = parseInt(req.params.productId);
 
     const deletedDetail = await orderService.deleteOrderProduct(
       orderId,

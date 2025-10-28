@@ -3,6 +3,7 @@ import { Request } from "express";
 import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcrypt";
 import { prisma } from "../../lib/prisma";
+import { User } from "../../../generated/prisma";
 
 const initialiseSignUp = (): void => {
   passport.use(
@@ -16,9 +17,9 @@ const initialiseSignUp = (): void => {
       async (req: Request, email: string, password: string, done: Function) => {
         try {
           const { name } = req.body;
-          const hashedPassword = await bcrypt.hash(password, 10);
+          const hashedPassword: string = await bcrypt.hash(password, 10);
 
-          const existingUser = await prisma.user.findUnique({
+          const existingUser: User | null = await prisma.user.findUnique({
             where: { email },
           });
 
@@ -26,7 +27,7 @@ const initialiseSignUp = (): void => {
             return done(null, false, { message: "Email already registered." });
           }
 
-          const newUser = await prisma.user.create({
+          const newUser: User = await prisma.user.create({
             data: {
               email,
               name,

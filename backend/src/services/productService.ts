@@ -1,18 +1,19 @@
+import { Product } from "../../generated/prisma";
 import { prisma } from "../lib/prisma";
 
 export const getProducts = async (page: number = 1, limit: number = 10) => {
   try {
-    const skip = (page - 1) * limit;
+    const skip: number = (page - 1) * limit;
 
-    const products = await prisma.product.findMany({
+    const products: Product[] = await prisma.product.findMany({
       skip,
       take: limit,
       include: { categories: true },
       orderBy: { id: "asc" },
     });
 
-    const total = await prisma.product.count();
-    const totalPages = Math.ceil(total / limit);
+    const total: number = await prisma.product.count();
+    const totalPages: number = Math.ceil(total / limit);
 
     return {
       data: products,
@@ -31,7 +32,7 @@ export const getProducts = async (page: number = 1, limit: number = 10) => {
 
 export const getProduct = async (id: number) => {
   try {
-    const product = await prisma.product.findUniqueOrThrow({
+    const product: Product = await prisma.product.findUniqueOrThrow({
       where: { id },
       include: { categories: true },
     });
@@ -39,7 +40,7 @@ export const getProduct = async (id: number) => {
     return product;
   } catch (error: any) {
     if (error.code == "P2025" || error.code == "P2021") {
-      const notFoundError = new Error("Product not found.");
+      const notFoundError: Error = new Error("Product not found.");
       notFoundError.name = "NotFoundError";
       throw notFoundError;
     }
@@ -59,7 +60,7 @@ export const addProduct = async (
   categoryId: number
 ) => {
   try {
-    const newProduct = await prisma.product.create({
+    const newProduct: Product = await prisma.product.create({
       data: {
         name,
         description,
@@ -90,7 +91,7 @@ export const updateProduct = async (
   categoryId?: number
 ) => {
   try {
-    const updatedProduct = await prisma.product.update({
+    const updatedProduct: Product = await prisma.product.update({
       where: { id },
       data: {
         name,
@@ -107,7 +108,7 @@ export const updateProduct = async (
     return updatedProduct;
   } catch (error: any) {
     if (error.code == "P2025" || error.code == "P2021") {
-      const notFoundError = new Error("Product not found.");
+      const notFoundError: Error = new Error("Product not found.");
       notFoundError.name = "NotFoundError";
       throw notFoundError;
     }
@@ -119,14 +120,14 @@ export const updateProduct = async (
 
 export const deleteProduct = async (id: number) => {
   try {
-    const deletedProduct = await prisma.product.delete({
+    const deletedProduct: Product = await prisma.product.delete({
       where: { id },
     });
 
     return deletedProduct;
   } catch (error: any) {
     if (error.code == "P2025" || error.code == "P2021") {
-      const notFoundError = new Error("Product not found.");
+      const notFoundError: Error = new Error("Product not found.");
       notFoundError.name = "NotFoundError";
       throw notFoundError;
     }

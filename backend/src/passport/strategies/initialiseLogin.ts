@@ -2,6 +2,7 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcrypt";
 import { prisma } from "../../lib/prisma";
+import { User } from "../../../generated/prisma";
 
 const initialiseLogin = (): void => {
   passport.use(
@@ -13,7 +14,7 @@ const initialiseLogin = (): void => {
       },
       async (email: string, password: string, done: Function) => {
         try {
-          const user = await prisma.user.findUnique({
+          const user: User | null = await prisma.user.findUnique({
             where: { email },
           });
 
@@ -21,7 +22,10 @@ const initialiseLogin = (): void => {
             return done(null, false, { message: "Unable to find user." });
           }
 
-          const matchedPassword = await bcrypt.compare(password, user.password);
+          const matchedPassword: boolean = await bcrypt.compare(
+            password,
+            user.password
+          );
 
           if (!matchedPassword) {
             return done(null, false, { message: "Invalid password " });
@@ -43,7 +47,7 @@ passport.serializeUser((user: any, done) => {
 
 passport.deserializeUser(async (id: number, done: Function) => {
   try {
-    const user = await prisma.user.findUnique({
+    const user: User | null = await prisma.user.findUnique({
       where: { id },
     });
     done(null, user);

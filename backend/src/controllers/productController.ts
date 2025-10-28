@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
 import * as productService from "../services/productService";
+import { Products } from "../types/Product";
+import { Product } from "../../generated/prisma";
 
 export const getProducts = async (req: Request, res: Response) => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    const page: number = parseInt(req.query.page as string) || 1;
+    const limit: number = parseInt(req.query.limit as string) || 10;
 
     if (page <= 0 || limit <= 0) {
       return res
@@ -12,7 +14,7 @@ export const getProducts = async (req: Request, res: Response) => {
         .json({ error: "Page and limit must be positive." });
     }
 
-    const products = await productService.getProducts(page, limit);
+    const products: Products = await productService.getProducts(page, limit);
 
     if (!products) {
       return res.status(404).json({ message: "No products found." });
@@ -26,13 +28,13 @@ export const getProducts = async (req: Request, res: Response) => {
 
 export const getProduct = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id: number = parseInt(req.params.id);
 
     if (id == null) {
       return res.status(400).json({ error: "Invalid product ID." });
     }
 
-    const product = await productService.getProduct(id);
+    const product: Product = await productService.getProduct(id);
 
     res.status(200).json({ data: product });
   } catch (error: any) {
@@ -56,7 +58,7 @@ export const addProduct = async (req: Request, res: Response) => {
       categoryId,
     } = req.body;
 
-    const newProduct = await productService.addProduct(
+    const newProduct: Product = await productService.addProduct(
       name,
       description,
       quantity,
@@ -83,7 +85,7 @@ export const addProduct = async (req: Request, res: Response) => {
 
 export const updateProduct = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id: number = parseInt(req.params.id);
 
     if (id == null) {
       return res.status(400).json({ error: "Invalid product ID." });
@@ -99,7 +101,7 @@ export const updateProduct = async (req: Request, res: Response) => {
       categoryId,
     } = req.body;
 
-    const updatedProduct = await productService.updateProduct(
+    const updatedProduct: Product = await productService.updateProduct(
       id,
       name,
       description,
@@ -125,7 +127,7 @@ export const updateProduct = async (req: Request, res: Response) => {
 
 export const deleteProduct = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id: number = parseInt(req.params.id);
 
     if (id == null) {
       return res.status(400).json({ error: "Invalid product ID." });
