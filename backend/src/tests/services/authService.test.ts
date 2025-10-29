@@ -1,6 +1,3 @@
-import dotenv from "dotenv";
-dotenv.config();
-
 import { signUp, login } from "../../services/authService";
 import { prisma } from "../../lib/prisma";
 import bcrypt from "bcrypt";
@@ -14,11 +11,15 @@ jest.mock("../../lib/prisma", () => ({
   },
 }));
 
+jest.mock("../../utils/generateToken", () => ({
+  generateToken: jest.fn(() => "mock-token"),
+}));
+
 describe("authService", () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
-  
+
   beforeAll(() => {
     jest.spyOn(console, "error").mockImplementation(() => {});
   });
