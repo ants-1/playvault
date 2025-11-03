@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import * as categoryService from "../services/categoryService";
 import { Category } from "../../generated/prisma";
 import { Categories } from "../types/Category";
+import { uploadToCloudinary } from "../utils/uploadToCloudinary";
 
 export const getCategories = async (req: Request, res: Response) => {
   try {
@@ -51,12 +52,19 @@ export const getCategory = async (req: Request, res: Response) => {
 
 export const addCategory = async (req: Request, res: Response) => {
   try {
-    const { name, description, thumbnail } = req.body;
+    let thumbnailUrl: string | null = "";
+
+    if (req.files && (req.files as any).thumbnail) {
+      const thumbFile = (req.files as any).thumbnail[0];
+      thumbnailUrl = await uploadToCloudinary(thumbFile.path);
+    }
+
+    const { name, description } = req.body;
 
     const newCategory: Category = await categoryService.addCategory(
       name,
       description,
-      thumbnail
+      thumbnailUrl
     );
 
     if (!newCategory) {
@@ -84,14 +92,21 @@ export const updateCategory = async (req: Request, res: Response) => {
     if (id == null) {
       return res.status(400).json({ error: "Invalid category ID." });
     }
+    
+    let thumbnailUrl: string | undefined;
 
-    const { name, description, thumbnail } = req.body;
+    if (req.files && (req.files as any).thumbnail) {
+      const thumbFile: any = (req.files as any).thumbnail[0];
+      thumbnailUrl = await uploadToCloudinary(thumbFile.path);
+    }
+
+    const { name, description} = req.body;
 
     const updateCategory: Category = await categoryService.updateCategory(
       id,
       name,
       description,
-      thumbnail
+      thumbnailUrl
     );
 
     res.status(200).json({

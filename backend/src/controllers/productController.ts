@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import * as productService from "../services/productService";
 import { Products } from "../types/Product";
 import { Product } from "../../generated/prisma";
+import { uploadToCloudinary } from "../utils/uploadToCloudinary";
 
 export const getProducts = async (req: Request, res: Response) => {
   try {
@@ -48,23 +49,30 @@ export const getProduct = async (req: Request, res: Response) => {
 
 export const addProduct = async (req: Request, res: Response) => {
   try {
-    const {
-      name,
-      description,
-      quantity,
-      price,
-      thumbnail,
-      images,
-      categoryId,
-    } = req.body;
+    let thumbnailUrl: string | null = "";
+    let imageUrl: string[] = [];
+
+    if (req.files && (req.files as any).thumbnail) {
+      const thumbFile = (req.files as any).thumbnail[0];
+      thumbnailUrl = await uploadToCloudinary(thumbFile.path);
+    }
+
+    if (req.files && (req.files as any).images) {
+      const imageFiles = (req.files as any).images;
+      imageUrl = await Promise.all(
+        imageFiles.map(async (file: any) => await uploadToCloudinary(file.path))
+      );
+    }
+
+    const { name, description, quantity, price, categoryId } = req.body;
 
     const newProduct: Product = await productService.addProduct(
       name,
       description,
       quantity,
       price,
-      thumbnail,
-      images,
+      thumbnailUrl,
+      imageUrl,
       categoryId
     );
 
@@ -90,15 +98,22 @@ export const updateProduct = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid product ID." });
     }
 
-    const {
-      name,
-      description,
-      quantity,
-      price,
-      thumbnail,
-      images,
-      categoryId,
-    } = req.body;
+    let thumbnailUrl: string | undefined;
+    let imageUrls: string[] | undefined;
+
+    if (req.files && (req.files as any).thumbnail) {
+      const thumbFile: any = (req.files as any).thumbnail[0];
+      thumbnailUrl = await uploadToCloudinary(thumbFile.path);
+    }
+
+    if (req.files && (req.files as any).images) {
+      const imageFiles: any[] = (req.files as any).images;
+      imageUrls = await Promise.all(
+        imageFiles.map(async (file: any) => await uploadToCloudinary(file.path))
+      );
+    }
+
+    const { name, description, quantity, price, categoryId } = req.body;
 
     const updatedProduct: Product = await productService.updateProduct(
       id,
@@ -106,8 +121,8 @@ export const updateProduct = async (req: Request, res: Response) => {
       description,
       quantity,
       price,
-      thumbnail,
-      images,
+      thumbnailUrl,
+      imageUrls,
       categoryId
     );
 
