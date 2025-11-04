@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import * as authService from "../services/authService";
 
 export const signUp = async (req: Request, res: Response) => {
@@ -34,3 +34,19 @@ export const login = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal server error." });
   }
 };
+
+export const logout = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+
+}
+
+export const googleCallback = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  
+}

@@ -64,3 +64,13 @@ export const login = async (email: string, password: string) => {
     throw error;
   }
 };
+
+export const logout = async () => {
+
+}
+
+export const googleCallback = async (
+
+) => {
+  
+}
