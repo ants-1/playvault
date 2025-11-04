@@ -39,7 +39,7 @@ export default function ProductCard({ product }: { product: typeof productsData.
         </Text>
         <Badge colorScheme="green">In Stock: {product.quantity}</Badge>
         <Text fontSize="lg" fontWeight="bold">
-          ${product.price}
+          £{product.price}
         </Text>
         <Text fontSize="sm" color="gray.400">
           Category: {product.categories.name}

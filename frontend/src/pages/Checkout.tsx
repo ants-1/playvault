@@ -105,7 +105,7 @@ export default function Checkout() {
               </VStack>
             </VStack>
 
-            <Button color="purple.600" mt={4} onClick={handleNext}>
+            <Button color="purple.700" mt={4} onClick={handleNext}>
               Next: Payment
             </Button>
           </Box>
@@ -135,13 +135,13 @@ export default function Checkout() {
                 <HStack key={idx} justify="space-between">
                   <Text>{item.name}</Text>
                   <Text>
-                    {item.quantity} x ${item.price.toFixed(2)}
+                    {item.quantity} x £{item.price.toFixed(2)}
                   </Text>
                 </HStack>
               ))}
               <HStack justify="space-between" mt={2}>
                 <Text fontWeight="bold">Total</Text>
-                <Text fontWeight="bold">${totalPrice.toFixed(2)}</Text>
+                <Text fontWeight="bold">£{totalPrice.toFixed(2)}</Text>
               </HStack>
             </VStack>
 
@@ -187,7 +187,7 @@ export default function Checkout() {
               <HStack gap={4} mt={4}>
                 <Button onClick={handleBack}>Back</Button>
                 <Button color="purple.600" onClick={handlePayment}>
-                  Pay ${totalPrice.toFixed(2)}
+                  Pay £{totalPrice.toFixed(2)}
                 </Button>
               </HStack>
             </VStack>

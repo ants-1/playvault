@@ -15,7 +15,7 @@ export default function Navbar() {
 
   return (
     <Flex
-      h="14"
+      h="16"
       bgColor="gray.900"
       px="6"
       alignItems="center"

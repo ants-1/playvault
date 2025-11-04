@@ -32,12 +32,12 @@ export default function Cart() {
   }, 0);
 
   return (
-    <Box px={{ base: 4, md: 10 }} py={6}>
+    <VStack px={{ base: 4, md: 10 }} py={6} >
       <Text fontSize="2xl" fontWeight="bold" mb={6}>
         Your Cart
       </Text>
 
-      <VStack align="stretch" gap={4}>
+      <VStack align="stretch" gap={4} maxW="4xl" w="full">
         {cartItems.length === 0 ? (
           <Box textAlign="center" py={20}>
             <Text fontSize="2xl" fontWeight="bold">
@@ -70,7 +70,7 @@ export default function Cart() {
                   />
                   <VStack align="start" gap={1} flex="1">
                     <Text fontWeight="bold">{product.name}</Text>
-                    <Text>${product.price}</Text>
+                    <Text>£{product.price}</Text>
                     <HStack>
                       <Button
                         size="sm"
@@ -104,7 +104,7 @@ export default function Cart() {
 
             <HStack justifyContent="space-between">
               <Text fontSize="xl" fontWeight="bold">
-                Total: ${totalPrice}
+                Total: £{totalPrice}
               </Text>
               <Link to="/checkout">
                 <Button colorScheme="purple" size="lg">
@@ -115,6 +115,6 @@ export default function Cart() {
           </VStack>
         )}
       </VStack>
-    </Box>
+    </VStack>
   );
 }

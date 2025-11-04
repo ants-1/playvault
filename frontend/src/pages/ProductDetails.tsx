@@ -116,7 +116,7 @@ export default function ProductDetails() {
           </Text>
           <Badge colorScheme="green">In Stock: {product.quantity}</Badge>
           <Text fontSize="2xl" fontWeight="bold">
-            ${product.price}
+            £{product.price}
           </Text>
           <Text fontSize="md" color="gray.400">
             Category: {product.categories.name}
