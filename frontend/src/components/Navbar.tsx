@@ -40,7 +40,7 @@ export default function Navbar() {
                 transition="color 0.2s"
               >
                 {link.icon}
-                <Text>{link.name}</Text>
+                <Text fontSize="sm">{link.name}</Text>
               </Flex>
             </Link>
           );

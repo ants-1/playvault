@@ -8,6 +8,7 @@ import SignUp from './pages/SignUp.tsx'
 import AuthLayout from './layouts/AuthLayout.tsx'
 import MainLayout from './layouts/MainLayout.tsx'
 import Products from './pages/Products.tsx'
+import ProductDetails from './pages/ProductDetails.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -17,6 +18,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/" element={<MainLayout />}>
             <Route index element={<App />} />
             <Route path="shop" element={<Products />} />
+            <Route path="/shop/:id" element={<ProductDetails />} />
           </Route>
           <Route element={<AuthLayout />}>
             <Route path="/login" element={<Login />} />

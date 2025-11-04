@@ -45,7 +45,7 @@ export default function ProductCard({ product }: { product: typeof productsData.
           Category: {product.categories.name}
         </Text>
         <Box mt="auto" w="full">
-          <Link to={`/products/${product.id}`}>
+          <Link to={`/shop/${product.id}`}>
             <Button colorScheme="red" size="sm" w="full">
               View Details
             </Button>
