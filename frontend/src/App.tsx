@@ -27,11 +27,12 @@ export default function App() {
   return (
     <Box>
       {/* Hero Section */}
-      <Box position="relative" w="full" maxH="92vh" h="full" overflow="hidden">
+      <Box position="relative" w="full" maxH="100vh" h="full" overflow="hidden">
         <Image
           src={heroImages[current]}
           alt="Hero"
           objectFit="cover"
+          minH="90vh"
           w="full"
           h="full"
           transition="opacity 0.5s ease-in-out"
