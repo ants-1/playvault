@@ -15,6 +15,7 @@ import Cart from './pages/Cart.tsx'
 import Checkout from './pages/Checkout.tsx'
 import HomeLayout from './layouts/HomeLayout.tsx'
 import AboutUs from './pages/AboutUs.tsx'
+import GoogleCallback from './pages/GoogleCallback.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -35,6 +36,7 @@ createRoot(document.getElementById('root')!).render(
             <Route element={<AuthLayout />}>
               <Route path="/login" element={<Login />} />
               <Route path="/sign-up" element={<SignUp />} />
+              <Route path="/google/callback" element={<GoogleCallback />} />
             </Route>
           </Routes>
         </BrowserRouter>

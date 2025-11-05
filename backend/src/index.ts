@@ -5,6 +5,7 @@ import session from "express-session";
 import bodyParser from "body-parser";
 import routes from "./routes/indexRoutes";
 import rateLimit from "express-rate-limit";
+import cors from "cors";
 
 import { authenticateJWT, AuthRequest } from "./middlewares/authenticateJWT";
 
@@ -14,10 +15,16 @@ const limter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   message: "Too many requests from this IP, please try again after 15 minutes",
-})
+});
 
 initialisePassport();
 
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.use(bodyParser.json());
 app.use(express.json());
 app.use(

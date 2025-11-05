@@ -45,9 +45,10 @@ export const googleCallback = async (
   passport.authenticate(
     "google",
     { session: false },
-    async (err: Error, user: any) => {
-      if (err || !user) {
-        return res.status(400).json({ error: "Google authentication failed" });
+    async (error: Error, user: any) => {
+      if (error || !user) {
+        console.error(error);
+        return res.status(400).json({ error: "Google authentication failed:" });
       }
 
       try {

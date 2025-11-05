@@ -39,6 +39,10 @@ export default function Login() {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    window.location.href = "http://localhost:4000/api/v1/auth/google";
+  }
+
   return (
     <Stack minH="100vh" alignItems="center" justifyContent="center">
       <VStack borderWidth="1px" borderRadius="lg" borderColor="purple.500" p={10}>
@@ -61,8 +65,8 @@ export default function Login() {
               <Field.ErrorText>{errors.password?.message}</Field.ErrorText>
             </Field.Root>
 
-            <Button type="submit" mt="4" mb="2" loading={isLoading}>Login</Button>
-            <Button mb="2"><BsGoogle />Google</Button>
+            <Button type="submit" mt="4" mb="2" loading={isLoading} >Login</Button>
+            <Button mb="2" onClick={handleGoogleLogin}><BsGoogle />Google</Button>
 
             {error && (
               <Text color="red.400" fontSize="sm" textAlign="center">
