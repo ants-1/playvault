@@ -65,12 +65,24 @@ export const login = async (email: string, password: string) => {
   }
 };
 
-export const logout = async () => {
+export const googleCallback = async (profile: any) => {
+  try {
+    const email = profile.emails?.[0]?.value;
+    const name = profile.displayName || "Google User";
 
-}
+    if (!email) throw new Error("No email found in Google profile");
 
-export const googleCallback = async (
+    let user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      user = await prisma.user.create({
+        data: { name, email, password: "" },
+      });
+    }
 
-) => {
-  
-}
+    const token = generateToken(user.id);
+    return { user, token };
+  } catch (error) {
+    console.error("Google callback error:", error);
+    throw error;
+  }
+};
