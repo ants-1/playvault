@@ -1,94 +1,79 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 import {
   Box,
   Text,
   VStack,
-  Button,
-  Grid,
-  HStack,
-  Input,
-} from "@chakra-ui/react"
-import { productsData } from "../utils/mockData";
-import ProductCard from "../components/ProductCard";
+} from "@chakra-ui/react";
+import { useGetCategoriesQuery } from "../slices/categorySlice";
+import { useGetProductsQuery } from "../slices/productSlice";
+import Pagination from "../components/Pagination";
+import ProductList from "../components/ProductList";
+import SearchBar from "../components/SearchBar";
+import CategorySelection from "../components/CategorySelection";
 
 export default function Products() {
-  const [page, setPage] = useState(productsData.pagination.page)
-  const [searchQuery, setSearchQuery] = useState("")
-  const limit = productsData.pagination.limit
+  const { data: categoryData } = useGetCategoriesQuery(undefined);
+  const { data: productsData } = useGetProductsQuery(undefined);
 
-  const filteredProducts = productsData.data.filter((product) =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
-  const totalPages = Math.ceil(filteredProducts.length / limit)
+  const limit = 9; 
 
-  const start = (page - 1) * limit
-  const end = start + limit
-  const currentProducts = filteredProducts.slice(start, end)
+  const categoriesFromApi = categoryData?.data ?? [];
+  const productsArray = productsData?.data ?? [];
 
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }, [page])
+  const categories = [{ id: 0, name: "All", thumbnail: "https://res.cloudinary.com/dhdlno07z/image/upload/v1762635858/products/txghsmjldcymnvjnnu7i.jpg" }, ...categoriesFromApi];
 
-  const handlePrevious = () => {
-    setPage((prev) => Math.max(prev - 1, 1))
-  }
+  const filteredProducts = productsArray.filter((product: any) => {
+    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const handleNext = () => {
-    setPage((prev) => Math.min(prev + 1, totalPages))
-  }
+    if (selectedCategory === "All") return matchesSearch;
 
-  useEffect(() => {
-    setPage(1)
-  }, [searchQuery])
+    const productCategories = product.categories
+      ? Array.isArray(product.categories)
+        ? product.categories
+        : [product.categories]
+      : [];
+    return matchesSearch && productCategories.some((c: any) => c.name === selectedCategory);
+  });
+
+  const totalPages = Math.ceil(filteredProducts.length / limit);
+  const currentProducts = filteredProducts.slice((page - 1) * limit, page * limit);
+
+  useEffect(() => window.scrollTo({ top: 0, behavior: "smooth" }), [page]);
+  useEffect(() => setPage(1), [searchQuery, selectedCategory]);
 
   return (
-    <Box px={{ base: 4, md: 10 }} py={6}>
-      <Text fontSize="2xl" fontWeight="bold" textAlign="center" mb={6}>
-        Shop
+    <Box px={{ base: 4, md: 10 }} py={6} justifyContent="center" alignItems="center">
+      <CategorySelection
+        categories={categories}
+        productsArray={productsArray}
+        selectedCategory={selectedCategory}
+        onSelectedCategory={setSelectedCategory}
+      />
+
+      <Text fontSize="3xl" fontWeight="bold" textAlign="center" mt={16} mb={6}>
+        {selectedCategory === "All" ? "All Products" : `${selectedCategory} Products`}
       </Text>
 
-      {/* Search Bar */}
-      <Box mb={10} w={{ base: "100%", md: "50%" }} mx="auto">
-        <Input
-          placeholder="Search products..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          bg="gray.900"
-          color="white"
-          borderColor="purple.500"
-        />
-      </Box>
+      <SearchBar
+        searchQuery={searchQuery}
+        onSearchQuery={setSearchQuery}
+      />
 
       <VStack>
-        <Grid
-          templateColumns={{
-            base: "repeat(1, 1fr)",
-            md: "repeat(2, 1fr)",
-            lg: "repeat(3, 1fr)",
-          }}
-          gap={6}
-          w="100%"
-          mb={6}
-        >
-          {currentProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </Grid>
+        <ProductList
+          products={currentProducts}
+        />
 
-        {/* Pagination */}
-        <HStack gap={4}>
-          <Button onClick={handlePrevious} disabled={page === 1}>
-            Previous
-          </Button>
-          <Text>
-            Page {page} of {totalPages || 1}
-          </Text>
-          <Button onClick={handleNext} disabled={page === totalPages || totalPages === 0}>
-            Next
-          </Button>
-        </HStack>
+        <Pagination
+          page={page}
+          onPage={setPage}
+          totalPages={totalPages}
+        />
       </VStack>
     </Box>
-  )
+  );
 }
