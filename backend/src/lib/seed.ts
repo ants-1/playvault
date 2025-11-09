@@ -3,89 +3,82 @@ import { PrismaClient } from "../../generated/prisma";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Starting database seed...");
+  console.log("Clearing database...");
 
-  // Users
-  const userOne = await prisma.user.create({
-    data: {
-      email: "alice@example.com",
-      name: "Alice Johnson",
-      password: "hashed_password_123",
-    },
-  });
-  const userTwo = await prisma.user.create({
-    data: {
-      email: "bob@example.com",
-      name: "Bob Smith",
-      password: "hashed_password_456",
-    },
-  });
+  // Delete all products and categories
+  await prisma.product.deleteMany({});
+  await prisma.category.deleteMany({});
+
+  console.log("Database cleared. Starting seed...");
 
   // Categories
-  const categoryOne = await prisma.category.create({
+  const electronicsCategory = await prisma.category.create({
     data: {
       name: "Electronics",
       description: "Devices and gadgets",
-      thumbnail: "N/A",
-    },
-  });
-  const categoryTwo = await prisma.category.create({
-    data: {
-      name: "Clothing",
-      description: "Fashion and apparel",
-      thumbnail: "N/A",
+      thumbnail:
+        "https://res.cloudinary.com/dhdlno07z/image/upload/v1762636213/products/gx7gvsmjfzmdg0ttxkt1.jpg",
     },
   });
 
-  // Products
-  const productOne = await prisma.product.create({
+  const gamingCategory = await prisma.category.create({
     data: {
-      name: "Wireless Headphones",
-      description: "Noise-cancelling over-ear headphones",
-      quantity: 20,
-      price: 99.99,
-      thumbnail: "N/A",
-      images: ["N/A", "N/A"],
-      categories: { connect: { id: categoryOne.id } },
-    },
-  });
-  const productTwo = await prisma.product.create({
-    data: {
-      name: "T-Shirt",
-      description: "100% cotton, size L",
-      quantity: 50,
-      price: 19.99,
-      thumbnail: "N/A",
-      images: ["N/A"],
-      categories: { connect: { id: categoryTwo.id } },
+      name: "Gaming",
+      description: "Video games",
+      thumbnail:
+        "https://res.cloudinary.com/dhdlno07z/image/upload/v1762634538/products/a4avtarvq6zel7fhsygx.jpg",
     },
   });
 
-  // Orders
-  const orderOne = await prisma.order.create({
+  const accessoriesCategory = await prisma.category.create({
     data: {
-      customerId: userOne.id,
-      amount: 119.98,
-      shippingAddress: "123 Main St, London",
-      orderAddress: "123 Main St, London",
-      orderEmail: userOne.email,
-      orderStatus: "Processing",
-      details: {
-        create: [
-          {
-            productId: productOne.id,
-            price: productOne.price,
-            quantity: 1,
-          },
-          {
-            productId: productTwo.id,
-            price: productTwo.price,
-            quantity: 1,
-          },
-        ],
+      name: "Accessories",
+      description: "Accessory related to gaming",
+      thumbnail:
+        "https://res.cloudinary.com/dhdlno07z/image/upload/v1762636073/products/uiu2zsqfqongdtlduuvn.jpg",
+    },
+  });
+
+  // Images per category
+  const electronicsImages = [
+    "https://res.cloudinary.com/dhdlno07z/image/upload/v1762636217/products/rwolemxgimuyzuzmuwee.jpg",
+    "https://res.cloudinary.com/dhdlno07z/image/upload/v1762636215/products/nnyyo9semebuag7bmuln.jpg",
+  ];
+
+  const gamingImages = [
+    "https://res.cloudinary.com/dhdlno07z/image/upload/v1762636529/products/oeajnufadbwwke7b4pmn.jpg",
+    "https://res.cloudinary.com/dhdlno07z/image/upload/v1762636532/products/caly4dttf9k97fpuuti0.jpg",
+  ];
+
+  const accessoriesImages = [
+    "https://res.cloudinary.com/dhdlno07z/image/upload/v1762636074/products/qgczl15ik4xudbzkqmrp.jpg",
+    "https://res.cloudinary.com/dhdlno07z/image/upload/v1762636074/products/ec4a2kgkockrsemilkqf.jpg",
+  ];
+
+  const categories = [
+    { cat: electronicsCategory, images: electronicsImages },
+    { cat: gamingCategory, images: gamingImages },
+    { cat: accessoriesCategory, images: accessoriesImages },
+  ];
+
+  // Generate 100 products
+  for (let i = 1; i <= 100; i++) {
+    const categoryIndex = i % categories.length;
+    const category = categories[categoryIndex];
+    const images = category.images;
+
+    await prisma.product.create({
+      data: {
+        name: `${category.cat.name} Product ${i}`,
+        description: `Description for ${category.cat.name} product ${i}`,
+        quantity: Math.floor(Math.random() * 50) + 1,
+        price: parseFloat((Math.random() * 200 + 10).toFixed(2)),
+        thumbnail: images[0],
+        images: images,
+        categories: { connect: { id: category.cat.id } },
       },
-    },
-  });
+    });
+  }
 
   console.log("Seeding completed.");
 }

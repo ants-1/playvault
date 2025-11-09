@@ -5,11 +5,11 @@ import fs from "fs";
 // Store files temporarily before uploading to Cloudinary
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const dir = "uploads";
+    const dir = "public/uploads";
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir);
     }
-    cb(null, "uploads/");
+    cb(null, "public/uploads/");
   },
   filename: function (req, file, cb) {
     const ext = path.extname(file.originalname);

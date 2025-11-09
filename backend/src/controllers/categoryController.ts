@@ -52,14 +52,14 @@ export const getCategory = async (req: Request, res: Response) => {
 
 export const addCategory = async (req: Request, res: Response) => {
   try {
+    const { name, description } = req.body;
+
     let thumbnailUrl: string | null = "";
 
     if (req.files && (req.files as any).thumbnail) {
       const thumbFile = (req.files as any).thumbnail[0];
       thumbnailUrl = await uploadToCloudinary(thumbFile.path);
     }
-
-    const { name, description } = req.body;
 
     const newCategory: Category = await categoryService.addCategory(
       name,
@@ -92,7 +92,7 @@ export const updateCategory = async (req: Request, res: Response) => {
     if (id == null) {
       return res.status(400).json({ error: "Invalid category ID." });
     }
-    
+
     let thumbnailUrl: string | undefined;
 
     if (req.files && (req.files as any).thumbnail) {
@@ -100,7 +100,7 @@ export const updateCategory = async (req: Request, res: Response) => {
       thumbnailUrl = await uploadToCloudinary(thumbFile.path);
     }
 
-    const { name, description} = req.body;
+    const { name, description } = req.body;
 
     const updateCategory: Category = await categoryService.updateCategory(
       id,
