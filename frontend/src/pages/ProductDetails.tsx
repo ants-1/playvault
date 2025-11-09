@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link as RouterLink } from "react-router-dom";
 import {
   Box,
@@ -11,16 +11,34 @@ import {
   Grid,
   Flex,
 } from "@chakra-ui/react";
-import { productsData } from "../utils/mockData";
+import { useGetProductQuery } from "../slices/productSlice";
 
 export default function ProductDetails() {
   const { id } = useParams<{ id: string }>();
-  const productId = parseInt(id || "0");
 
-  const product = productsData.data.find((p) => p.id === productId);
-  const [mainImage, setMainImage] = useState(product?.thumbnail);
+  const { data: productResponse, isLoading, isError } = useGetProductQuery(id!, {
+    skip: !id,
+  });
 
-  if (!product) {
+  const product = productResponse?.data;
+
+  const [mainImage, setMainImage] = useState<string | undefined>(product?.thumbnail);
+
+  useEffect(() => {
+    if (product?.thumbnail) setMainImage(product.thumbnail);
+  }, [product]);
+
+  if (isLoading) {
+    return (
+      <Box p={6} textAlign="center">
+        <Text fontSize="2xl" fontWeight="bold">
+          Loading product...
+        </Text>
+      </Box>
+    );
+  }
+
+  if (isError || !product) {
     return (
       <Box p={6} textAlign="center">
         <Text fontSize="2xl" fontWeight="bold">
@@ -32,64 +50,33 @@ export default function ProductDetails() {
 
   return (
     <Box px={{ base: 4, md: 10 }} py={6}>
-      <Flex
-        gap={2}
-        fontSize="sm"
-        color="gray.400"
-        mb={4}
-        flexWrap="wrap"
-        alignItems="center"
-      >
+      {/* Breadcrumb */}
+      <Flex gap={2} fontSize="sm" color="gray.400" mb={4} flexWrap="wrap" alignItems="center">
         <RouterLink to="/shop" style={{ textDecoration: "none" }}>
-          <Text
-            _hover={{ color: "purple.500", textDecoration: "underline" }}
-            truncate
-            maxW={{ base: "60px", md: "100px" }}
-          >
+          <Text _hover={{ color: "purple.500", textDecoration: "underline" }} truncate maxW={{ base: "60px", md: "100px" }}>
             Shop
           </Text>
         </RouterLink>
         <Text>/</Text>
-        <RouterLink
-          to={`/shop?category=${product.categories.id}`}
-          style={{ textDecoration: "none" }}
-        >
-          <Text
-            _hover={{ color: "purple.500", textDecoration: "underline" }}
-            truncate
-            maxW={{ base: "80px", md: "150px" }}
-          >
+        <RouterLink to={`/shop?category=${product.categories.id}`} style={{ textDecoration: "none" }}>
+          <Text _hover={{ color: "purple.500", textDecoration: "underline" }} truncate maxW={{ base: "80px", md: "150px" }}>
             {product.categories.name}
           </Text>
         </RouterLink>
         <Text>/</Text>
-        <Text
-          fontWeight="bold"
-          color="purple.700"
-          truncate
-          maxW={{ base: "100px", md: "200px" }}
-        >
+        <Text fontWeight="bold" color="purple.700" truncate maxW={{ base: "100px", md: "200px" }}>
           {product.name}
         </Text>
       </Flex>
 
-      <Grid
-        templateColumns={{ base: "1fr", md: "1fr 1fr" }}
-        gap={6}
-        alignItems="start"
-      >
+      {/* Product layout */}
+      <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6} alignItems="start">
+        {/* Images */}
         <VStack align="start" gap={4}>
-          <Image
-            src={mainImage}
-            alt={product.name}
-            objectFit="cover"
-            w="100%"
-            maxH="400px"
-            borderRadius="md"
-          />
+          <Image src={mainImage} alt={product.name} objectFit="cover" w="100%" maxH="400px" borderRadius="md" />
 
           <HStack gap={4} wrap="wrap">
-            {product.images.map((img, idx) => (
+            {product.images.map((img: string, idx: number) => (
               <Image
                 key={idx}
                 src={img}
@@ -107,6 +94,7 @@ export default function ProductDetails() {
           </HStack>
         </VStack>
 
+        {/* Details */}
         <VStack align="start" gap={4}>
           <Text fontSize="3xl" fontWeight="bold">
             {product.name}

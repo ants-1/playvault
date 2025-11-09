@@ -7,7 +7,7 @@ interface SearchBarProps {
 
 export default function SearchBar({ searchQuery, onSearchQuery: setSearchQuery }: SearchBarProps) {
   return (
-    <Box mb={10} w={{ base: "100%", md: "50%" }} mx="auto">
+    <Box mb={6} w={{ base: "100%", md: "50%" }} mx="auto">
       <Input
         placeholder="Search products..."
         value={searchQuery}

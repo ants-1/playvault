@@ -10,11 +10,8 @@ export const productApiSlice = apiSlice.injectEndpoints({
       }),
     }),
     getProduct: builder.query({
-      query: ({ id }: { id: string}) => ({
-        url: `${PRODUCT_URL}/${id}`,
-        method: "GET"
-      }),
-    })
+      query: (id: string) => `${PRODUCT_URL}/${id}`,
+    }),
   })
 })
 
