@@ -10,7 +10,6 @@ const orderSchema = z.object({
   orderDetails: z.array(
     z.object({
       productId: z.number().min(1, "Invalid product ID"),
-      price: z.number().min(0, "Price cannot be negative"),
       quantity: z.number().min(1, "Quantity must be at least 1"),
     })
   ).min(1, "Order must have at least one product"),
@@ -26,14 +25,12 @@ const addProductsToOrderSchema = z.object({
   products: z.array(
     z.object({
       productId: z.number().min(1, "Invalid product ID"),
-      price: z.number().min(0, "Price cannot be negative"),
       quantity: z.number().min(1, "Quantity must be at least 1"),
     })
   ).min(1, "Must add at least one product"),
 });
 
 const updateOrderProductSchema = z.object({
-  price: z.number().min(0, "Price cannot be negative").optional(),
   quantity: z.number().min(1, "Quantity must be at least 1").optional(),
 });
 

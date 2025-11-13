@@ -68,7 +68,6 @@ model OrderDetail {
   id        Int   @id @default(autoincrement())
   orderId   Int
   productId Int
-  price     Float
   quantity  Int
 
   // Relations

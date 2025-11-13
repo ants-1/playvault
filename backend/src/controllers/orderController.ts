@@ -145,28 +145,29 @@ export const deleteOrder = async (req: Request, res: Response) => {
 export const addProductsToOrder = async (req: Request, res: Response) => {
   try {
     const orderId: number = parseInt(req.params.orderId);
-    const { products } = req.body;
+    const product = req.body;
 
-    const updatedOrder: Order = await orderService.addProductsToOrder(
-      orderId,
-      products
-    );
+    const updatedOrder = await orderService.addProductToOrder(orderId, product);
     res.status(200).json(updatedOrder);
   } catch (error: any) {
+    if (error.name === "NotFoundError") {
+      return res.status(404).json({ error: error.message });
+    }
+
     res.status(500).json({ error: "Internal server error." });
   }
 };
 
 export const updateOrderProduct = async (req: Request, res: Response) => {
   try {
-    const orderDetailId: number = parseInt(req.params.orderDetailId);
-    const updates: OrderDetail = req.body;
+    const orderId: number = parseInt(req.params.orderDetailId);
+    const updates = req.body;
 
-    const updatedDetail: OrderDetail = await orderService.updateOrderProduct(
-      orderDetailId,
+    const updatedOrder = await orderService.updateOrderProducts(
+      orderId,
       updates
     );
-    res.status(200).json(updatedDetail);
+    res.status(200).json(updatedOrder);
   } catch (error: any) {
     if (error.name === "NotFoundError") {
       return res.status(404).json({ error: error.message });
@@ -199,3 +200,21 @@ export const deleteOrderProduct = async (req: Request, res: Response) => {
   }
 };
 
+export const deleteAllOrderProducts = async (req: Request, res: Response) => {
+  try {
+    const orderId: number = parseInt(req.params.orderId);
+
+    const deletedDetails = await orderService.deleteAllOrderProducts(orderId);
+
+    res.status(200).json({
+      message: "All products removed from order",
+      deletedDetails,
+    });
+  } catch (error: any) {
+    if (error.name === "NotFoundError") {
+      return res.status(404).json({ error: error.message });
+    }
+
+    res.status(500).json({ error: "Internal server error." });
+  }
+};

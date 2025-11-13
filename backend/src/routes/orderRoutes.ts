@@ -18,19 +18,12 @@ router.put("/:id", validateUpdateOrder, orderController.updateOrder);
 router.delete("/:id", orderController.deleteOrder);
 
 // Order Products
-router.post(
-  "/:orderId/products",
-  validateAddProductsToOrder,
-  orderController.addProductsToOrder
-);
-router.put(
-  "/products/:orderDetailId",
-  validateUpdateOrderProduct,
-  orderController.updateOrderProduct
-);
+router.post("/:orderId/products", orderController.addProductsToOrder);
+router.put("/products/:orderDetailId", orderController.updateOrderProduct);
 router.delete(
   "/:orderId/products/:productId",
   orderController.deleteOrderProduct
 );
+router.delete("/:orderId/products", orderController.deleteAllOrderProducts);
 
 export default router;

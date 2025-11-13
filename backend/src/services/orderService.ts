@@ -124,10 +124,19 @@ export const createOrder = async (
   orderAddress: string,
   orderEmail: string,
   orderStatus: string,
-  orderDetails: { productId: number; price: number; quantity: number }[]
+  orderDetails: { productId: number; quantity: number }[]
 ) => {
   try {
-    const amount: number = calculateOrderAmount(orderDetails) | 0;
+    const detailsWithProduct = await Promise.all(
+      orderDetails.map(async (d) => {
+        const product = await prisma.product.findUniqueOrThrow({
+          where: { id: d.productId },
+        });
+        return { ...d, price: product.price };
+      })
+    );
+
+    const amount: number = calculateOrderAmount(detailsWithProduct);
 
     const newOrder: Order = await prisma.order.create({
       data: {
@@ -218,57 +227,96 @@ export const deleteOrder = async (id: number) => {
   }
 };
 
-export const addProductsToOrder = async (
+// Add single product to order - if in order increase quantity
+export const addProductToOrder = async (
   orderId: number,
-  products: { productId: number; price: number; quantity: number }[]
+  product: { productId: number; quantity: number }
 ) => {
   try {
-    const updatedOrder: Order = await prisma.order.update({
+    const order = await prisma.order.findUniqueOrThrow({
       where: { id: orderId },
-      data: {
-        details: {
-          create: products,
-        },
-      },
-      include: {
-        details: { include: { product: true } },
-      },
+      include: { details: true },
     });
 
-    return updatedOrder;
-  } catch (error: any) {
-    if (error.code == "P2025" || error.code == "P2021") {
-      const notFoundError: Error = new Error("Order not found.");
-      notFoundError.name = "NotFoundError";
-      throw notFoundError;
+    const existingProduct = await prisma.orderDetail.findFirst({
+      where: { orderId, productId: product.productId },
+    });
+
+    if (existingProduct) {
+      await prisma.orderDetail.update({
+        where: { id: existingProduct.id },
+        data: { quantity: existingProduct.quantity + product.quantity },
+      });
+    } else {
+      await prisma.orderDetail.create({
+        data: {
+          orderId,
+          productId: product.productId,
+          quantity: product.quantity,
+        },
+      });
     }
 
-    console.error("Failed to add products to order:", error);
-    throw new Error("Failed to add products to order.");
+    const updatedOrder = await prisma.order.findUniqueOrThrow({
+      where: { id: orderId },
+      include: { details: { include: { product: true } } },
+    });
+
+    const amount = calculateOrderAmount(
+      updatedOrder.details.map((d) => ({ ...d, price: d.product.price }))
+    );
+
+    return prisma.order.update({
+      where: { id: orderId },
+      data: { amount },
+      include: { details: { include: { product: true } } },
+    });
+  } catch (error: any) {
+    console.error("Failed to add product to order:", error);
+    throw new Error("Failed to add product to order.");
   }
 };
 
-export const updateOrderProduct = async (
-  orderDetailId: number,
-  updates: { price?: number; quantity?: number }
+// Update multiple order products
+export const updateOrderProducts = async (
+  orderId: number,
+  updates: { orderDetailId: number; quantity?: number }[]
 ) => {
   try {
-    const updatedOrderDetails: OrderDetail = await prisma.orderDetail.update({
-      where: { id: orderDetailId },
-      data: updates,
-      include: { product: true, order: true },
+    await prisma.order.findUniqueOrThrow({ where: { id: orderId } });
+
+    await Promise.all(
+      updates.map(({ orderDetailId, quantity }) =>
+        prisma.orderDetail.update({
+          where: { id: orderDetailId },
+          data: { quantity },
+        })
+      )
+    );
+
+    const orderDetails = await prisma.orderDetail.findMany({
+      where: { orderId },
+      include: { product: true },
     });
 
-    return updatedOrderDetails;
+    const newAmount = calculateOrderAmount(
+      orderDetails.map((d) => ({ ...d, price: d.product.price }))
+    );
+
+    return prisma.order.update({
+      where: { id: orderId },
+      data: { amount: newAmount },
+      include: { details: { include: { product: true } } },
+    });
   } catch (error: any) {
-    if (error.code == "P2025" || error.code == "P2021") {
-      const notFoundError: Error = new Error("Order not found.");
+    if (error.code === "P2025" || error.code === "P2021") {
+      const notFoundError = new Error("Order not found.");
       notFoundError.name = "NotFoundError";
       throw notFoundError;
     }
 
-    console.error("Failed to update order product:", error);
-    throw new Error("Failed to update order product.");
+    console.error("Failed to update multiple order products:", error);
+    throw new Error("Failed to update multiple order products.");
   }
 };
 
@@ -277,36 +325,62 @@ export const deleteOrderProduct = async (
   productId: number
 ) => {
   try {
+    const orderDetail = await prisma.orderDetail.findFirstOrThrow({
+      where: { orderId, productId },
+      include: { product: true },
+    });
+
+    await prisma.orderDetail.delete({ where: { id: orderDetail.id } });
+
+    const remainingDetails = await prisma.orderDetail.findMany({
+      where: { orderId },
+      include: { product: true },
+    });
+
+    const newAmount = calculateOrderAmount(
+      remainingDetails.map((d) => ({ ...d, price: d.product.price }))
+    );
+
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { amount: newAmount },
+    });
+
+    return orderDetail;
+  } catch (error: any) {
+    if (error.name === "NotFoundError") throw error;
+    console.error("Failed to delete product from order:", error);
+    throw new Error("Failed to delete product from order.");
+  }
+};
+
+export const deleteAllOrderProducts = async (orderId: number) => {
+  try {
     const deletedOrderDetails = await prisma.orderDetail.deleteMany({
       where: {
         orderId,
-        productId,
       },
     });
 
-    // Throw NotFoundError if no matching product found
     if (deletedOrderDetails.count === 0) {
-      const error = new Error("No matching product found in this order.");
+      const error = new Error("No products found in this order.");
       error.name = "NotFoundError";
       throw error;
     }
 
     return deletedOrderDetails;
   } catch (error: any) {
-    // Prisma record not found
     if (error.code === "P2025" || error.code === "P2021") {
       const notFoundError = new Error("Order not found.");
       notFoundError.name = "NotFoundError";
       throw notFoundError;
     }
 
-    // Already a NotFoundError
     if (error.name === "NotFoundError") {
       throw error;
     }
 
-    console.error("Failed to delete product from order:", error);
-    throw new Error("Failed to delete product from order.");
+    console.error("Failed to delete products from order:", error);
+    throw new Error("Failed to delete products from order.");
   }
 };
-
