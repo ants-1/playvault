@@ -1,10 +1,8 @@
-import { useEffect, useState } from "react";
 import { Flex, Text, HStack, Box, Icon } from "@chakra-ui/react";
 import { BiHome, BiShoppingBag, BiInfoSquare, BiUser, BiLogOut } from "react-icons/bi";
 import { CgShoppingCart } from "react-icons/cg";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { useGetOrdersQuery } from "../slices/orderApiSlice";
 import { logout } from "../slices/authSlice";
 import { useLogoutMutation } from "../slices/userApiSlice";
 
@@ -18,38 +16,12 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [logoutApi] = useLogoutMutation();
+
+  const cartItems = useSelector((state: any) => state.cart.items || []);
+  const cartItemCount = cartItems.reduce((acc: any, item: any) => acc + item.quantity, 0);
 
   const { userInfo } = useSelector((state: any) => state.auth);
-  const userId = userInfo?.user.userId || userInfo?.user.id;
-  const [cartItemCount, setCartItemCount] = useState(0);
-
-  const { data: ordersData } = useGetOrdersQuery(
-    { userId, page: 1, limit: 10 },
-    {
-      skip: !userInfo,
-      refetchOnMountOrArgChange: true,
-      refetchOnFocus: true,
-      refetchOnReconnect: true,
-    }
-  );
-
-  useEffect(() => {
-    if (ordersData?.data && Array.isArray(ordersData.data)) {
-      const openOrder = ordersData.data.find(
-        (order: any) => order.orderStatus === "open"
-      );
-
-      if (openOrder && Array.isArray(openOrder.details)) {
-        setCartItemCount(openOrder.details.length);
-      } else {
-        setCartItemCount(0);
-      }
-    } else {
-      setCartItemCount(0);
-    }
-  }, [ordersData]);
-
-  const [logoutApi] = useLogoutMutation();
 
   const handleLogout = async () => {
     try {
@@ -100,7 +72,7 @@ export default function Navbar() {
       <HStack gap="4">
         <Link to="/cart">
           <Flex position="relative">
-            <Icon _hover={{ color: "purple.500" }}>
+            <Icon _hover={{ color: "purple.500", cursor: "pointer" }}>
               <CgShoppingCart size={25} />
             </Icon>
             {cartItemCount > 0 && (
@@ -125,7 +97,10 @@ export default function Navbar() {
         </Link>
 
         {userInfo ? (
-          <Icon _hover={{ color: "purple.500", cursor: "pointer" }} onClick={handleLogout}>
+          <Icon
+            _hover={{ color: "purple.500", cursor: "pointer" }}
+            onClick={handleLogout}
+          >
             <BiLogOut size={25} />
           </Icon>
         ) : (

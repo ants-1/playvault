@@ -1,28 +1,25 @@
 import { useState, useEffect } from "react";
 import { Box, Text, VStack, HStack, Image, Button } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import {
   useGetOrdersQuery,
   useAddProductToOrderMutation,
   useRemoveOrderProductMutation,
 } from "../slices/orderApiSlice";
+import { addToCart, removeFromCart } from "../slices/cartSlice";
 import type UserInfo from "../types/User";
 
 export default function Cart() {
   const { userInfo } = useSelector((state: any) => state.auth) as {
     userInfo?: UserInfo;
   };
+  const dispatch = useDispatch();
   const userId = userInfo?.user.userId || userInfo?.user.id;
 
   const { data: ordersData, isLoading } = useGetOrdersQuery(
     { userId: userId, page: 1, limit: 10 },
-    {
-      skip: !userInfo,
-      refetchOnMountOrArgChange: true,
-      refetchOnFocus: true,
-      refetchOnReconnect: true,
-    }
+    { skip: !userInfo, refetchOnMountOrArgChange: true }
   );
 
   const [addProductToOrder] = useAddProductToOrderMutation();
@@ -38,6 +35,7 @@ export default function Cart() {
       } else {
         setCartItems([]);
       }
+      console.log(openOrder)
     }
   }, [ordersData]);
 
@@ -55,6 +53,13 @@ export default function Cart() {
       setCartItems((prev) =>
         prev.map((item) => (item.productId === productId ? { ...item, quantity: newQty } : item))
       );
+
+      dispatch(addToCart({
+        productId,
+        quantity: newQty,
+        name: cartItems.find(i => i.productId === productId)?.product?.name || "",
+        price: cartItems.find(i => i.productId === productId)?.product?.price || 0,
+      }));
     } catch (err) {
       console.error(err);
     }
@@ -68,6 +73,7 @@ export default function Cart() {
       await removeProductFromOrder({ orderId: openOrder.id, productId }).unwrap();
 
       setCartItems((prev) => prev.filter((item) => item.productId !== productId));
+      dispatch(removeFromCart(productId));
     } catch (err) {
       console.error(err);
     }

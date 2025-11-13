@@ -1,196 +1,185 @@
 import { useState } from "react";
-import { Box, Text, VStack, HStack, Input, Button, Flex } from "@chakra-ui/react";
+import { useSelector, useDispatch } from "react-redux";
+import { VStack, Box, Text, Input, Button, HStack } from "@chakra-ui/react";
+import {
+  useGetOrdersQuery,
+  useUpdateOrderMutation,
+} from "../slices/orderApiSlice";
+import { clearCart } from "../slices/cartSlice";
+import { Toaster, toaster } from "../components/ui/toaster";
 
 export default function Checkout() {
-  const [step, setStep] = useState(1);
+  const dispatch = useDispatch();
+  const cartItems = useSelector((state: any) => state.cart.items);
+  const { userInfo } = useSelector((state: any) => state.auth);
+  const userId = userInfo?.user.userId || userInfo?.user.id;
 
-  // Order info state
-  const [orderEmail, setOrderEmail] = useState("");
+  const [step, setStep] = useState(1);
+  const [orderEmail, setOrderEmail] = useState(userInfo?.user.email || "");
   const [shippingAddress, setShippingAddress] = useState("");
   const [orderAddress, setOrderAddress] = useState("");
-
-  // Payment form state
   const [cardNumber, setCardNumber] = useState("");
   const [cardName, setCardName] = useState("");
   const [expiry, setExpiry] = useState("");
   const [cvc, setCvc] = useState("");
 
-  const orderDetails = [
-    { productId: 1, name: "Wireless Headphones", price: 99.99, quantity: 1 },
-    { productId: 2, name: "Phone Case", price: 19.99, quantity: 2 },
-  ];
-
-  const totalPrice = orderDetails.reduce(
-    (acc, item) => acc + item.price * item.quantity,
+  const totalPrice = cartItems.reduce(
+    (acc: number, item: { price: number; quantity: number }) =>
+      acc + item.price * item.quantity,
     0
   );
 
+  const { data: ordersData, refetch } = useGetOrdersQuery(
+    { userId, page: 1, limit: 10 },
+    { skip: !userInfo }
+  );
+
+  const [updateOrder] = useUpdateOrderMutation();
+
+  const openOrder = ordersData?.data.find((order: any) => order.orderStatus === "open");
+
   const handleNext = () => {
     if (!orderEmail || !shippingAddress || !orderAddress) {
-      alert("Please fill in all order information fields");
+      toaster.create({ description: "Please fill all order info", type: "error" });
       return;
     }
     setStep(2);
   };
 
-  const handleBack = () => setStep(1);
+  const handlePayment = async () => {
+    if (!userId) {
+      toaster.create({ description: "You must be logged in to place an order", type: "error" });
+      return;
+    }
 
-  const handlePayment = () => {
-    alert("Payment submitted!");
+    if (cartItems.length === 0) {
+      toaster.create({ description: "Cart is empty", type: "error" });
+      return;
+    }
+
+    console.log("handlePayment called", { userId, cartItems, openOrder });
+
+    try {
+      if (openOrder) {
+        console.log("Updating existing order:", openOrder.id);
+
+        const updatePayload = {
+          orderStatus: "completed",
+          shippingAddress,
+          orderAddress,
+        };
+        console.log("Updating playload:", updatePayload);
+
+        const updatedOrder = await updateOrder({
+          orderId: openOrder.id,
+          ...updatePayload
+        }).unwrap();
+        console.log("Order updated:", updatedOrder);
+
+      }
+
+      await refetch();
+
+      dispatch(clearCart());
+
+      toaster.create({ description: "Payment successful! Order completed.", type: "success" });
+    } catch (err: any) {
+      console.error("Payment error:", err);
+      toaster.create({
+        description: err?.data?.message || err.message || "Failed to complete order",
+        type: "error",
+      });
+    }
   };
 
   return (
-    <VStack px={{ base: 4, md: 10 }} py={6}>
-      <Text fontSize="2xl" fontWeight="bold" mb={6}>
-        Checkout
-      </Text>
+    <VStack px={10} py={6}>
+      <Toaster />
+      <Text fontSize="2xl" fontWeight="bold">Checkout</Text>
 
-      <HStack mb={6} maxW="4xl" w="full">
-        <Flex
-          flex={1}
-          justify="center"
-          py={2}
-          borderBottomWidth={step === 1 ? "3px" : "1px"}
-          borderBottomStyle="solid"
-          borderBottomColor={step === 1 ? "purple.500" : "gray.300"}
-        >
-          <Text fontWeight={step === 1 ? "bold" : "normal"}>1. Order Info</Text>
-        </Flex>
-        <Flex
-          flex={1}
-          justify="center"
-          py={2}
-          borderBottomWidth={step === 2 ? "3px" : "1px"}
-          borderBottomStyle="solid"
-          borderBottomColor={step === 2 ? "purple.500" : "gray.300"}
-        >
-          <Text fontWeight={step === 2 ? "bold" : "normal"}>2. Payment</Text>
-        </Flex>
-      </HStack>
-
-      <VStack align="stretch" maxW="4xl" w="full" gap={6}>
-        {/* Order Info Step */}
+      <VStack align="stretch" gap={6} maxW="4xl" w="full">
         {step === 1 && (
-          <Box borderWidth="1px" borderRadius="md" borderColor="purple.500" p={4}>
-            <Text fontSize="xl" fontWeight="bold" mb={4}>
-              Order Information
-            </Text>
-
-            <VStack align="start" gap={3}>
-              <VStack align="start" gap={1} w="full">
-                <Text>Email</Text>
-                <Input
-                  placeholder="Enter your email"
-                  value={orderEmail}
-                  onChange={(e) => setOrderEmail(e.target.value)}
-                />
-              </VStack>
-
-              <VStack align="start" gap={1} w="full">
-                <Text>Shipping Address</Text>
-                <Input
-                  placeholder="Enter shipping address"
-                  value={shippingAddress}
-                  onChange={(e) => setShippingAddress(e.target.value)}
-                />
-              </VStack>
-
-              <VStack align="start" gap={1} w="full">
-                <Text>Order Address</Text>
-                <Input
-                  placeholder="Enter order address"
-                  value={orderAddress}
-                  onChange={(e) => setOrderAddress(e.target.value)}
-                />
-              </VStack>
-            </VStack>
-
-            <Button color="purple.700" mt={4} onClick={handleNext}>
+          <Box p={4} borderWidth="1px" borderColor="purple.500" borderRadius="md">
+            <Text fontWeight="bold" fontSize="lg" mb={4}>Order Information</Text>
+            <Input
+              placeholder="Email"
+              value={orderEmail}
+              onChange={(e) => setOrderEmail(e.target.value)}
+              mb={2}
+            />
+            <Input
+              placeholder="Shipping Address"
+              value={shippingAddress}
+              onChange={(e) => setShippingAddress(e.target.value)}
+              mb={2}
+            />
+            <Input
+              placeholder="Order Address"
+              value={orderAddress}
+              onChange={(e) => setOrderAddress(e.target.value)}
+            />
+            <Button colorScheme="purple" mt={4} onClick={handleNext}>
               Next: Payment
             </Button>
           </Box>
         )}
 
-        {/* Payment Step */}
         {step === 2 && (
-          <Box borderWidth="1px" borderRadius="md" borderColor="purple.500" p={4}>
-            <Text fontSize="xl" fontWeight="bold" mb={4}>
-              Payment
+          <Box p={4} borderWidth="1px" borderColor="purple.500" borderRadius="md">
+            <Text fontWeight="bold" fontSize="lg" mb={4}>Order Summary</Text>
+            {cartItems.map((item: any) => (
+              <HStack key={item.productId} justify="space-between">
+                <Text>{item.name}</Text>
+                <Text>{item.quantity} x £{item.price.toFixed(2)}</Text>
+              </HStack>
+            ))}
+            <HStack justify="space-between" mt={2}>
+              <Text fontWeight="bold">Total</Text>
+              <Text fontWeight="bold">£{totalPrice.toFixed(2)}</Text>
+            </HStack>
+
+            <Text
+              fontWeight="bold"
+              mt={4}
+              pt="4"
+              pb="4"
+              borderTop="1px solid"
+              borderColor="gray.700"
+              fontSize="lg"
+            >
+              Payment Info
             </Text>
+            <Input
+              placeholder="Cardholder Name"
+              value={cardName}
+              onChange={(e) => setCardName(e.target.value)}
+              mb={2}
+            />
+            <Input
+              placeholder="Card Number"
+              value={cardNumber}
+              onChange={(e) => setCardNumber(e.target.value)}
+              mb={2}
+            />
+            <HStack gap={2}>
+              <Input
+                placeholder="Expiry"
+                value={expiry}
+                onChange={(e) => setExpiry(e.target.value)}
+              />
+              <Input
+                placeholder="CVC"
+                value={cvc}
+                onChange={(e) => setCvc(e.target.value)}
+              />
+            </HStack>
 
-            <VStack align="stretch" borderWidth="1px" borderRadius="md" p={4} mb={4}>
-              <Text fontWeight="bold" mb={2}>
-                Your Order Information
-              </Text>
-              <Text>Email: {orderEmail}</Text>
-              <Text>Shipping Address: {shippingAddress}</Text>
-              <Text>Order Address: {orderAddress}</Text>
-            </VStack>
-
-            <VStack align="stretch" borderWidth="1px" borderRadius="md" p={4} mb={4}>
-              <Text fontWeight="bold" mb={2}>
-                Order Summary
-              </Text>
-              {orderDetails.map((item, idx) => (
-                <HStack key={idx} justify="space-between">
-                  <Text>{item.name}</Text>
-                  <Text>
-                    {item.quantity} x £{item.price.toFixed(2)}
-                  </Text>
-                </HStack>
-              ))}
-              <HStack justify="space-between" mt={2}>
-                <Text fontWeight="bold">Total</Text>
-                <Text fontWeight="bold">£{totalPrice.toFixed(2)}</Text>
-              </HStack>
-            </VStack>
-
-            {/* Payment Form */}
-            <VStack align="stretch" gap={4}>
-              <VStack align="start" gap={1}>
-                <Text>Cardholder Name</Text>
-                <Input
-                  placeholder="Name on card"
-                  value={cardName}
-                  onChange={(e) => setCardName(e.target.value)}
-                />
-              </VStack>
-
-              <VStack align="start" gap={1}>
-                <Text>Card Number</Text>
-                <Input
-                  placeholder="1234 5678 9012 3456"
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(e.target.value)}
-                />
-              </VStack>
-
-              <HStack gap={4}>
-                <VStack align="start" gap={1} flex={1}>
-                  <Text>Expiry</Text>
-                  <Input
-                    placeholder="MM/YY"
-                    value={expiry}
-                    onChange={(e) => setExpiry(e.target.value)}
-                  />
-                </VStack>
-                <VStack align="start" gap={1} flex={1}>
-                  <Text>CVC</Text>
-                  <Input
-                    placeholder="CVC"
-                    value={cvc}
-                    onChange={(e) => setCvc(e.target.value)}
-                  />
-                </VStack>
-              </HStack>
-
-              <HStack gap={4} mt={4}>
-                <Button onClick={handleBack}>Back</Button>
-                <Button color="purple.600" onClick={handlePayment}>
-                  Pay £{totalPrice.toFixed(2)}
-                </Button>
-              </HStack>
-            </VStack>
+            <HStack mt={4} gap={4}>
+              <Button onClick={() => setStep(1)}>Back</Button>
+              <Button colorScheme="purple" onClick={handlePayment} loading={false}>
+                Pay £{totalPrice.toFixed(2)}
+              </Button>
+            </HStack>
           </Box>
         )}
       </VStack>

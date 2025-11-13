@@ -12,10 +12,11 @@ const orderSchema = z.object({
         quantity: z.number().min(1, "Quantity must be at least 1"),
       })
     )
-    .min(1, "Order must have at least one product"),
+    .optional(),
 });
 
 const updateOrderSchema = z.object({
+  email :z.string().min(1, "Email address cannot be empty").optional(),
   orderStatus: z.string().min(1, "Order status cannot be empty").optional(),
   shippingAddress: z
     .string()
@@ -37,7 +38,7 @@ const updateOrderProductSchema = z.object({
         quantity: z.number().min(1, "Quantity must be at least 1").optional(),
       })
     )
-    .min(1, "Must provide at least one product update"),
+    .optional(),
 });
 
 export const validateOrder = validateData(orderSchema);
