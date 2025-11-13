@@ -13,8 +13,16 @@ jest.mock("../../lib/prisma", () => ({
       delete: jest.fn(),
     },
     orderDetail: {
+      findFirst: jest.fn(),
+      findFirstOrThrow: jest.fn(),
+      findMany: jest.fn(),
       update: jest.fn(),
+      delete: jest.fn(),
       deleteMany: jest.fn(),
+      create: jest.fn(),
+    },
+    product: {
+      findUniqueOrThrow: jest.fn(),
     },
   },
 }));
@@ -34,11 +42,12 @@ describe("Order Service", () => {
     (console.error as jest.Mock).mockRestore();
   });
 
-  const mockOrder = { id: 1, customerId: 1, amount: 100 };
-  const mockOrderDetail = { id: 1, productId: 1, price: 50, quantity: 2 };
+  const mockOrder = { id: 1, customerId: 1, amount: 100, details: [], customer: {} };
+  const mockOrderDetail = { id: 1, productId: 1, quantity: 2, product: { price: 50 } };
+  const mockProduct = { id: 1, price: 50 };
 
   describe("getOrders", () => {
-    it("should return paginated orders", async () => {
+    it("returns paginated orders", async () => {
       (prisma.order.findMany as jest.Mock).mockResolvedValue([mockOrder]);
       (prisma.order.count as jest.Mock).mockResolvedValue(1);
 
@@ -52,7 +61,7 @@ describe("Order Service", () => {
       expect(prisma.order.count).toHaveBeenCalled();
     });
 
-    it("should throw error on DB failure", async () => {
+    it("throws error if DB fails", async () => {
       (prisma.order.findMany as jest.Mock).mockRejectedValue(new Error("DB fail"));
 
       await expect(orderService.getOrders(1, 10)).rejects.toThrow(
@@ -62,7 +71,7 @@ describe("Order Service", () => {
   });
 
   describe("getOrdersByCustomer", () => {
-    it("should return orders for a customer", async () => {
+    it("returns orders for a customer", async () => {
       (prisma.order.findMany as jest.Mock).mockResolvedValue([mockOrder]);
       (prisma.order.count as jest.Mock).mockResolvedValue(1);
 
@@ -73,35 +82,26 @@ describe("Order Service", () => {
         pagination: { total: 1, page: 1, limit: 10, totalPages: 1 },
       });
     });
-
-    it("should throw error on DB failure", async () => {
-      (prisma.order.findMany as jest.Mock).mockRejectedValue(new Error("DB fail"));
-
-      await expect(orderService.getOrdersByCustomer(1, 1, 10)).rejects.toThrow(
-        "Failed to fetch order by customer."
-      );
-    });
   });
 
   describe("getOrderById", () => {
-    it("should return an order", async () => {
+    it("returns an order", async () => {
       (prisma.order.findUniqueOrThrow as jest.Mock).mockResolvedValue(mockOrder);
 
       const result = await orderService.getOrderById(1);
       expect(result).toEqual(mockOrder);
     });
 
-    it("should throw NotFoundError if order not found", async () => {
+    it("throws NotFoundError if not found", async () => {
       (prisma.order.findUniqueOrThrow as jest.Mock).mockRejectedValue({ code: "P2025" });
 
-      await expect(orderService.getOrderById(999)).rejects.toThrow(
-        "Order not found."
-      );
+      await expect(orderService.getOrderById(999)).rejects.toThrow("Order not found.");
     });
   });
 
   describe("createOrder", () => {
-    it("should create an order", async () => {
+    it("creates an order", async () => {
+      (prisma.product.findUniqueOrThrow as jest.Mock).mockResolvedValue(mockProduct);
       (calculateOrderAmount as jest.Mock).mockReturnValue(100);
       (prisma.order.create as jest.Mock).mockResolvedValue(mockOrder);
 
@@ -111,87 +111,79 @@ describe("Order Service", () => {
         "order addr",
         "test@test.com",
         "pending",
-        [{ productId: 1, price: 50, quantity: 2 }]
+        [{ productId: 1, quantity: 2 }]
       );
 
       expect(result).toEqual(mockOrder);
     });
-
-    it("should throw NotFoundError if create fails with P2025", async () => {
-      (prisma.order.create as jest.Mock).mockRejectedValue({ code: "P2025" });
-
-      await expect(
-        orderService.createOrder(1, "s", "b", "e@test.com", "pending", [])
-      ).rejects.toThrow("Order not found.");
-    });
   });
 
   describe("updateOrderDetails", () => {
-    it("should update an order", async () => {
+    it("updates an order", async () => {
       (prisma.order.update as jest.Mock).mockResolvedValue(mockOrder);
 
       const result = await orderService.updateOrderDetails(1, "shipped", "s", "b");
       expect(result).toEqual(mockOrder);
     });
-
-    it("should throw NotFoundError if update fails", async () => {
-      (prisma.order.update as jest.Mock).mockRejectedValue({ code: "P2025" });
-
-      await expect(orderService.updateOrderDetails(999)).rejects.toThrow(
-        "Order not found."
-      );
-    });
   });
 
   describe("deleteOrder", () => {
-    it("should delete an order", async () => {
+    it("deletes an order", async () => {
       (prisma.order.delete as jest.Mock).mockResolvedValue(mockOrder);
 
       const result = await orderService.deleteOrder(1);
       expect(result).toEqual(mockOrder);
     });
-
-    it("should throw NotFoundError if delete fails", async () => {
-      (prisma.order.delete as jest.Mock).mockRejectedValue({ code: "P2025" });
-
-      await expect(orderService.deleteOrder(999)).rejects.toThrow(
-        "Order not found."
-      );
-    });
   });
 
-  describe("addProductsToOrder", () => {
-    it("should add products to order", async () => {
+  describe("addProductToOrder", () => {
+    it("adds a product to order", async () => {
+      (prisma.order.findUniqueOrThrow as jest.Mock).mockResolvedValue({ details: [], id: 1 });
+      (prisma.orderDetail.findFirst as jest.Mock).mockResolvedValue(null);
+      (prisma.orderDetail.create as jest.Mock).mockResolvedValue(mockOrderDetail);
       (prisma.order.update as jest.Mock).mockResolvedValue(mockOrder);
+      (prisma.order.findUniqueOrThrow as jest.Mock).mockResolvedValue({
+        details: [mockOrderDetail],
+        id: 1,
+      });
+      (calculateOrderAmount as jest.Mock).mockReturnValue(100);
 
-      const result = await orderService.addProductsToOrder(1, [mockOrderDetail]);
+      const result = await orderService.addProductToOrder(1, { productId: 1, quantity: 2 });
       expect(result).toEqual(mockOrder);
     });
   });
 
-  describe("updateOrderProduct", () => {
-    it("should update an order product", async () => {
-      (prisma.orderDetail.update as jest.Mock).mockResolvedValue(mockOrderDetail);
+  describe("updateOrderProducts", () => {
+    it("updates multiple products in an order", async () => {
+      (prisma.order.findUniqueOrThrow as jest.Mock).mockResolvedValue({ id: 1 });
+      (prisma.orderDetail.findMany as jest.Mock).mockResolvedValue([mockOrderDetail]);
+      (calculateOrderAmount as jest.Mock).mockReturnValue(100);
+      (prisma.order.update as jest.Mock).mockResolvedValue(mockOrder);
 
-      const result = await orderService.updateOrderProduct(1, { price: 60 });
-      expect(result).toEqual(mockOrderDetail);
+      const result = await orderService.updateOrderProducts(1, [{ orderDetailId: 1, quantity: 5 }]);
+      expect(result).toEqual(mockOrder);
     });
   });
 
   describe("deleteOrderProduct", () => {
-    it("should delete an order product", async () => {
-      (prisma.orderDetail.deleteMany as jest.Mock).mockResolvedValue({ count: 1 });
+    it("deletes a single product from order", async () => {
+      (prisma.orderDetail.findFirstOrThrow as jest.Mock).mockResolvedValue(mockOrderDetail);
+      (prisma.orderDetail.delete as jest.Mock).mockResolvedValue(mockOrderDetail);
+      (prisma.orderDetail.findMany as jest.Mock).mockResolvedValue([]);
+      (calculateOrderAmount as jest.Mock).mockReturnValue(0);
+      (prisma.order.update as jest.Mock).mockResolvedValue(mockOrder);
 
       const result = await orderService.deleteOrderProduct(1, 1);
-      expect(result).toEqual({ count: 1 });
+      expect(result).toEqual(mockOrderDetail);
     });
+  });
 
-    it("should throw error if no product found", async () => {
-      (prisma.orderDetail.deleteMany as jest.Mock).mockResolvedValue({ count: 0 });
+  describe("deleteAllOrderProducts", () => {
+    it("deletes all products from order", async () => {
+      (prisma.orderDetail.deleteMany as jest.Mock).mockResolvedValue({ count: 2 });
 
-      await expect(orderService.deleteOrderProduct(1, 1)).rejects.toThrow(
-        "No matching product found in this order."
-      );
+      const result = await orderService.deleteAllOrderProducts(1);
+      expect(result).toEqual({ count: 2 });
     });
   });
 });

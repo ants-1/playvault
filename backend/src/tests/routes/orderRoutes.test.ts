@@ -21,7 +21,7 @@ describe("Order Routes with Validation", () => {
   });
 
   const mockOrder = { id: 1, customerId: 1 };
-  const mockOrderDetail = { id: 1, productId: 1 };
+  const mockOrderDetail = { id: 1, productId: 1, quantity: 2 };
 
   describe("GET /api/orders", () => {
     it("returns paginated orders", async () => {
@@ -42,7 +42,7 @@ describe("Order Routes with Validation", () => {
   });
 
   describe("GET /api/orders/:id", () => {
-    it("returns 404 if no ID provided", async () => {
+    it("returns 404 if invalid ID", async () => {
       const res = await request(app).get("/api/orders/NaN");
       expect(res.status).toBe(404);
     });
@@ -58,7 +58,7 @@ describe("Order Routes with Validation", () => {
   });
 
   describe("GET /api/orders/customers/:customerId", () => {
-    it("returns 404 if customerId not provided", async () => {
+    it("returns 404 if invalid customerId", async () => {
       const res = await request(app).get("/api/orders/customers/NaN");
       expect(res.status).toBe(404);
     });
@@ -73,15 +73,13 @@ describe("Order Routes with Validation", () => {
 
   describe("POST /api/orders", () => {
     it("returns 400 if required fields are missing", async () => {
-      const res = await request(app)
-        .post("/api/orders")
-        .send({
-          customerId: 1,
-          shippingAddress: "s",
-          orderAddress: "b",
-          orderEmail: "test@test.com",
-          orderDetails: [{ productId: 1, price: 10, quantity: 1 }],
-        });
+      const res = await request(app).post("/api/orders").send({
+        customerId: 1,
+        shippingAddress: "s",
+        orderAddress: "b",
+        orderEmail: "test@test.com",
+        orderDetails: [{ productId: 1, quantity: 1 }],
+      });
 
       expect(res.status).toBe(400);
     });
@@ -89,16 +87,14 @@ describe("Order Routes with Validation", () => {
     it("creates an order successfully", async () => {
       (orderService.createOrder as jest.Mock).mockResolvedValue(mockOrder);
 
-      const res = await request(app)
-        .post("/api/orders")
-        .send({
-          customerId: 1,
-          shippingAddress: "s",
-          orderAddress: "b",
-          orderEmail: "test@test.com",
-          orderStatus: "pending",
-          orderDetails: [{ productId: 1, price: 10, quantity: 1 }],
-        });
+      const res = await request(app).post("/api/orders").send({
+        customerId: 1,
+        shippingAddress: "s",
+        orderAddress: "b",
+        orderEmail: "test@test.com",
+        orderStatus: "pending",
+        orderDetails: [{ productId: 1, quantity: 1 }],
+      });
 
       expect(res.status).toBe(201);
       expect(res.body).toEqual(mockOrder);
@@ -140,21 +136,19 @@ describe("Order Routes with Validation", () => {
   });
 
   describe("POST /api/orders/:orderId/products", () => {
-    it("returns 400 if products payload invalid", async () => {
+    it("returns 400 if product payload invalid", async () => {
       const res = await request(app)
         .post("/api/orders/1/products")
-        .send({ products: "invalid" });
+        .send({ product: "invalid" });
       expect(res.status).toBe(400);
     });
 
-    it("adds products successfully", async () => {
-      (orderService.addProductsToOrder as jest.Mock).mockResolvedValue(
-        mockOrder
-      );
+    it("adds product successfully", async () => {
+      (orderService.addProductToOrder as jest.Mock).mockResolvedValue(mockOrder);
 
       const res = await request(app)
         .post("/api/orders/1/products")
-        .send({ products: [{ productId: 1, price: 10, quantity: 2 }] });
+        .send({ productId: 104, quantity: 2 });
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual(mockOrder);
@@ -165,21 +159,21 @@ describe("Order Routes with Validation", () => {
     it("returns 400 for invalid update data", async () => {
       const res = await request(app)
         .put("/api/orders/products/1")
-        .send({ quantity: -1 });
+        .send({ updates: [{ orderDetailId: 1, quantity: -1 }] });
       expect(res.status).toBe(400);
     });
 
     it("updates product successfully", async () => {
-      (orderService.updateOrderProduct as jest.Mock).mockResolvedValue(
-        mockOrderDetail
+      (orderService.updateOrderProducts as jest.Mock).mockResolvedValue(
+        mockOrder
       );
 
       const res = await request(app)
         .put("/api/orders/products/1")
-        .send({ quantity: 2 });
+        .send({ updates: [{ orderDetailId: 1, quantity: 2 }] });
 
       expect(res.status).toBe(200);
-      expect(res.body).toEqual(mockOrderDetail);
+      expect(res.body).toEqual(mockOrder);
     });
   });
 
@@ -194,9 +188,9 @@ describe("Order Routes with Validation", () => {
     });
 
     it("deletes product successfully", async () => {
-      (orderService.deleteOrderProduct as jest.Mock).mockResolvedValue({
-        count: 1,
-      });
+      (orderService.deleteOrderProduct as jest.Mock).mockResolvedValue(
+        mockOrderDetail
+      );
 
       const res = await request(app).delete("/api/orders/1/products/1");
       expect(res.status).toBe(200);
