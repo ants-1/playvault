@@ -3,8 +3,6 @@ import { validateData } from "../middlewares/validateMiddleware";
 
 const orderSchema = z.object({
   customerId: z.number().min(1, "Invalid customer ID"),
-  shippingAddress: z.string().min(1, "Shipping address cannot be empty"),
-  orderAddress: z.string().min(1, "Order address cannot be empty"),
   orderEmail: z.email("Invalid email address"),
   orderStatus: z.string().min(1, "Order status cannot be empty"),
   orderDetails: z
