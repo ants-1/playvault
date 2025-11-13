@@ -3,9 +3,10 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { BsGoogle } from "react-icons/bs";
 import { useState } from "react";
-import { useLoginMutation } from "../slices/userApiSlice";
+import { useGuestLoginMutation, useLoginMutation } from "../slices/userApiSlice";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "../slices/authSlice";
+import { BiUser } from "react-icons/bi";
 
 type FormInputs = {
   email: string;
@@ -20,6 +21,7 @@ export default function Login() {
   } = useForm<FormInputs>();
   const [error, setError] = useState<string | null>(null);
   const [login, { isLoading }] = useLoginMutation();
+  const [guestLogin, { isLoading: isGuestLoading }] = useGuestLoginMutation();
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -35,6 +37,19 @@ export default function Login() {
       console.error("Login error:", error);
       const message =
         error?.data?.error || error?.data?.message || "Login failed. Please try again.";
+      setError(message);
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    try {
+      const response = await guestLogin({}).unwrap();
+      dispatch(setCredentials(response));
+      navigate("/");
+    } catch (error: any) {
+      console.error("Guest login error:", error);
+      const message =
+        error?.data?.error || error?.data?.message || "Guest login failed.";
       setError(message);
     }
   };
@@ -65,7 +80,8 @@ export default function Login() {
               <Field.ErrorText>{errors.password?.message}</Field.ErrorText>
             </Field.Root>
 
-            <Button type="submit" mt="4" mb="2" loading={isLoading} >Login</Button>
+            <Button type="submit" mt="4" mb="2" loading={isLoading}>Login</Button>
+            <Button mb="2" onClick={handleGuestLogin} loading={isGuestLoading}><BiUser />Guest Login</Button>
             <Button mb="2" onClick={handleGoogleLogin}><BsGoogle />Google</Button>
 
             {error && (

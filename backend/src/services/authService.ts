@@ -86,3 +86,46 @@ export const googleCallback = async (profile: any) => {
     throw error;
   }
 };
+
+export const guestLogin = async () => {
+  try {
+    const GUEST_EMAIL = process.env.GUEST_EMAIL;
+    const GUEST_PASSWORD = process.env.GUEST_PASSWORD;
+
+    if (!GUEST_EMAIL || !GUEST_PASSWORD) {
+      throw new Error("Guest credentials not configured.");
+    }
+
+    const user: User | null = await prisma.user.findUnique({
+      where: { email: GUEST_EMAIL },
+    });
+
+    if (!user) {
+      const hashedPassword = await bcrypt.hash(GUEST_PASSWORD, 10);
+      const newGuest: User = await prisma.user.create({
+        data: {
+          name: "Guest User",
+          email: GUEST_EMAIL,
+          password: hashedPassword,
+        },
+      });
+
+      const token = generateToken(newGuest.id);
+      return { user: newGuest, token };
+    }
+
+    const isMatch = await bcrypt.compare(GUEST_PASSWORD, user.password);
+
+    if (!isMatch) {
+      const authError: Error = new Error("Invalid passowrd.");
+      authError.name = "AuthenticationError";
+      throw authError;
+    }
+
+    const token = generateToken(user.id);
+    return { user, token };
+  } catch (error: any) {
+    console.error("Guest login failed:", error);
+    throw error;
+  }
+};

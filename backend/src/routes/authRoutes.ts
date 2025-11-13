@@ -13,5 +13,6 @@ router.get(
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 router.get("/google/callback", authController.googleCallback);
+router.post("/guest", authController.guestLogin);
 
 export default router;

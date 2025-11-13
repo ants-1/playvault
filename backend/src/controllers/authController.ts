@@ -86,3 +86,17 @@ export const logout = async (
     next(err);
   }
 };
+
+export const guestLogin = async (req: Request, res: Response) => {
+  try {
+    const { user, token } = await authService.guestLogin();
+
+    res.status(200).json({ message: "Guest login successful", user, token });
+  } catch (error: any) {
+    if (error.name === "AuthenticationError") {
+      return res.status(401).json({ error: error.message });
+    }
+
+    res.status(500).json({ error: "Failed to login as guest." });
+  }
+};
