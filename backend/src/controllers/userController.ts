@@ -6,7 +6,7 @@ import { User } from "../../generated/prisma";
 export const getUsers = async (req: Request, res: Response) => {
   try {
     const page: number = parseInt(req.query.page as string) || 1;
-    const limit: number = parseInt(req.query.limit as string) | 10;
+    const limit: number = parseInt(req.query.limit as string) || 10;
 
     if (page <= 0 || limit <= 0) {
       return res
@@ -26,7 +26,7 @@ export const getUser = async (req: Request, res: Response) => {
   try {
     const id: number = parseInt(req.params.id);
 
-    if (id == null) {
+    if (isNaN(id)) {
       return res.status(400).json({ error: "Invalid user ID." });
     }
 
@@ -46,7 +46,7 @@ export const updateUser = async (req: Request, res: Response) => {
   try {
     const id: number = parseInt(req.params.id);
 
-    if (id == null) {
+    if (isNaN(id)) {
       return res.status(400).json({ error: "Invalid user ID." });
     }
 
@@ -78,6 +78,11 @@ export const updateUser = async (req: Request, res: Response) => {
 export const updateUserPassword = async (req: Request, res: Response) => {
   try {
     const id: number = parseInt(req.params.id);
+
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Invalid user ID." });
+    }
+
     const { oldPassword, newPassword } = req.body;
 
     const result: PasswordResult = await userService.updateUserPassword(

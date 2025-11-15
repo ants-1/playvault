@@ -2,8 +2,10 @@ import request from "supertest";
 import express, { json } from "express";
 import * as categoryService from "../../services/categoryService";
 import categoryRoutes from "../../routes/categoryRoutes";
+import * as uploadUtil from "../../utils/uploadToCloudinary";
 
 jest.mock("../../services/categoryService");
+jest.mock("../../utils/uploadToCloudinary");
 
 const app = express();
 app.use(json());
@@ -14,6 +16,7 @@ describe("Category Routes", () => {
     jest.clearAllMocks();
   });
 
+  // ================= GET /api/categories =================
   describe("GET /api/categories", () => {
     it("should return categories", async () => {
       const mockData = {
@@ -36,6 +39,7 @@ describe("Category Routes", () => {
     });
   });
 
+  // ================= GET /api/categories/:id =================
   describe("GET /api/categories/:id", () => {
     it("should return single category", async () => {
       const mockCategory = { id: 1, name: "Food" };
@@ -57,8 +61,15 @@ describe("Category Routes", () => {
       expect(response.status).toBe(404);
       expect(response.body).toEqual({ error: "Category not found." });
     });
+
+    it("should return 400 if ID is invalid", async () => {
+      const response = await request(app).get("/api/categories/abc");
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({ error: "Invalid category ID." });
+    });
   });
 
+  // ================= POST /api/categories =================
   describe("POST /api/categories", () => {
     it("should create new category", async () => {
       const newCat = { id: 1, name: "New", description: "Desc", thumbnail: "" };
@@ -96,8 +107,41 @@ describe("Category Routes", () => {
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty("errors");
     });
+
+    it("should call uploadToCloudinary if file provided", async () => {
+      const newCat = { id: 1, name: "New", description: "Desc", thumbnail: "url" };
+      (categoryService.addCategory as jest.Mock).mockResolvedValue(newCat);
+      (uploadUtil.uploadToCloudinary as jest.Mock).mockResolvedValue("url");
+
+      const response = await request(app)
+        .post("/api/categories")
+        .attach("thumbnail", Buffer.from("fake"), "thumb.png")
+        .field("name", "New")
+        .field("description", "Desc");
+
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual({
+        message: "Category successfully created.",
+        data: newCat,
+      });
+      expect(uploadUtil.uploadToCloudinary).toHaveBeenCalled();
+    });
+
+    it("should return 400 if service returns null", async () => {
+      (categoryService.addCategory as jest.Mock).mockResolvedValue(null);
+
+      const response = await request(app)
+        .post("/api/categories")
+        .send({ name: "New", description: "Desc" });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({
+        error: "Error occured while creating category.",
+      });
+    });
   });
 
+  // ================= PUT /api/categories/:id =================
   describe("PUT /api/categories/:id", () => {
     it("should update category", async () => {
       const updated = { id: 1, name: "Updated" };
@@ -125,8 +169,33 @@ describe("Category Routes", () => {
 
       expect(response.status).toBe(404);
     });
+
+    it("should return 400 if ID is invalid", async () => {
+      const response = await request(app).put("/api/categories/abc").send({});
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({ error: "Invalid category ID." });
+    });
+
+    it("should call uploadToCloudinary if file provided", async () => {
+      const updatedCat = { id: 1, name: "Updated" };
+      (categoryService.updateCategory as jest.Mock).mockResolvedValue(updatedCat);
+      (uploadUtil.uploadToCloudinary as jest.Mock).mockResolvedValue("url");
+
+      const response = await request(app)
+        .put("/api/categories/1")
+        .attach("thumbnail", Buffer.from("fake"), "thumb.png")
+        .field("name", "Updated");
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        message: "Category successfully updated.",
+        data: updatedCat,
+      });
+      expect(uploadUtil.uploadToCloudinary).toHaveBeenCalled();
+    });
   });
 
+  // ================= DELETE /api/categories/:id =================
   describe("DELETE /api/categories/:id", () => {
     it("should delete category", async () => {
       (categoryService.deleteCategory as jest.Mock).mockResolvedValue(
@@ -147,6 +216,12 @@ describe("Category Routes", () => {
 
       const response = await request(app).delete("/api/categories/999");
       expect(response.status).toBe(404);
+    });
+
+    it("should return 400 if ID is invalid", async () => {
+      const response = await request(app).delete("/api/categories/abc");
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({ error: "Invalid category ID." });
     });
   });
 });

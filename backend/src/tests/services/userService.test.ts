@@ -58,6 +58,15 @@ describe("userService", () => {
         "Failed to fetch users."
       );
     });
+
+    it("should throw error if findMany returns empty array and count returns 0", async () => {
+      (prisma.user.findMany as jest.Mock).mockResolvedValue([]);
+      (prisma.user.count as jest.Mock).mockResolvedValue(0);
+
+      await expect(userService.getUsers(1, 10)).rejects.toThrow(
+        "Failed to fetch users."
+      );
+    });
   });
 
   describe("getUser", () => {
@@ -70,11 +79,25 @@ describe("userService", () => {
       expect(result).toEqual(mockUser);
     });
 
-    it("should throw NotFoundError if user not found", async () => {
+    it("should throw NotFoundError if user not found (P2025)", async () => {
       const error: any = { code: "P2025" };
       (prisma.user.findUniqueOrThrow as jest.Mock).mockRejectedValue(error);
 
       await expect(userService.getUser(999)).rejects.toThrow("User not found.");
+    });
+
+    it("should throw NotFoundError if user not found (P2021)", async () => {
+      const error: any = { code: "P2021" };
+      (prisma.user.findUniqueOrThrow as jest.Mock).mockRejectedValue(error);
+
+      await expect(userService.getUser(999)).rejects.toThrow("User not found.");
+    });
+
+    it("should throw generic error if unexpected error occurs", async () => {
+      const error: any = { code: "UNKNOWN" };
+      (prisma.user.findUniqueOrThrow as jest.Mock).mockRejectedValue(error);
+
+      await expect(userService.getUser(1)).rejects.toThrow("Failed to fetch user");
     });
   });
 
@@ -96,8 +119,17 @@ describe("userService", () => {
       expect(result).toEqual(mockUser);
     });
 
-    it("should throw NotFoundError if user not found", async () => {
+    it("should throw NotFoundError if user not found (P2025)", async () => {
       const error: any = { code: "P2025" };
+      (prisma.user.update as jest.Mock).mockRejectedValue(error);
+
+      await expect(
+        userService.updaterUser(999, "Name", "email@test.com")
+      ).rejects.toThrow("User not found.");
+    });
+
+    it("should throw NotFoundError if user not found (P2021)", async () => {
+      const error: any = { code: "P2021" };
       (prisma.user.update as jest.Mock).mockRejectedValue(error);
 
       await expect(
@@ -112,6 +144,15 @@ describe("userService", () => {
       await expect(
         userService.updaterUser(1, "Name", "existing@test.com")
       ).rejects.toThrow("User email already exists.");
+    });
+
+    it("should throw generic error if unexpected error occurs", async () => {
+      const error: any = { code: "UNKNOWN" };
+      (prisma.user.update as jest.Mock).mockRejectedValue(error);
+
+      await expect(
+        userService.updaterUser(1, "Name", "email@test.com")
+      ).rejects.toThrow("Failed to update user");
     });
   });
 
@@ -153,13 +194,64 @@ describe("userService", () => {
       ).rejects.toThrow("Passwords do not match.");
     });
 
-    it("should throw NotFoundError if user not found", async () => {
+    it("should throw NotFoundError if user not found (P2025)", async () => {
       const error: any = { code: "P2025" };
       (prisma.user.findUniqueOrThrow as jest.Mock).mockRejectedValue(error);
 
       await expect(
         userService.updateUserPassword(999, "oldPass", "newPass")
       ).rejects.toThrow("User not found.");
+    });
+
+    it("should throw NotFoundError if user not found (P2021)", async () => {
+      const error: any = { code: "P2021" };
+      (prisma.user.findUniqueOrThrow as jest.Mock).mockRejectedValue(error);
+
+      await expect(
+        userService.updateUserPassword(999, "oldPass", "newPass")
+      ).rejects.toThrow("User not found.");
+    });
+
+    it("should throw generic error if unexpected error occurs", async () => {
+      const error: any = { code: "UNKNOWN" };
+      (prisma.user.findUniqueOrThrow as jest.Mock).mockRejectedValue(error);
+
+      await expect(
+        userService.updateUserPassword(1, "oldPass", "newPass")
+      ).rejects.toThrow("Failed to update password.");
+    });
+
+    it("should throw error if bcrypt.compare fails unexpectedly", async () => {
+      const mockUser: User = {
+        id: 1,
+        name: "John",
+        email: "john@example.com",
+        password: "hashed-oldPass",
+      } as User;
+
+      (prisma.user.findUniqueOrThrow as jest.Mock).mockResolvedValue(mockUser);
+      (bcrypt.compare as jest.Mock).mockRejectedValue(new Error("bcrypt fail"));
+
+      await expect(
+        userService.updateUserPassword(1, "oldPass", "newPass")
+      ).rejects.toThrow("Failed to update password.");
+    });
+
+    it("should throw error if bcrypt.hash fails unexpectedly", async () => {
+      const mockUser: User = {
+        id: 1,
+        name: "John",
+        email: "john@example.com",
+        password: "hashed-oldPass",
+      } as User;
+
+      (prisma.user.findUniqueOrThrow as jest.Mock).mockResolvedValue(mockUser);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (bcrypt.hash as jest.Mock).mockRejectedValue(new Error("hash fail"));
+
+      await expect(
+        userService.updateUserPassword(1, "oldPass", "newPass")
+      ).rejects.toThrow("Failed to update password.");
     });
   });
 });

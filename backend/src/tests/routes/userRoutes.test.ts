@@ -41,6 +41,12 @@ describe("User Routes", () => {
       expect(res.status).toBe(500);
       expect(res.body).toEqual({ error: "Internal server error." });
     });
+
+    it("should return 400 if page or limit is <= 0", async () => {
+      const res = await request(app).get("/api/users?page=0&limit=-5");
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ error: "Page and limit must be positive." });
+    });
   });
 
   describe("GET /api/users/:id", () => {
@@ -63,6 +69,20 @@ describe("User Routes", () => {
 
       expect(res.status).toBe(404);
       expect(res.body).toEqual({ error: "User not found" });
+    });
+
+    it("should return 400 if invalid user ID", async () => {
+      const res = await request(app).get("/api/users/abc");
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ error: "Invalid user ID." });
+    });
+
+    it("should return 500 for generic error", async () => {
+      (userService.getUser as jest.Mock).mockRejectedValue(new Error("Oops"));
+
+      const res = await request(app).get("/api/users/1");
+      expect(res.status).toBe(500);
+      expect(res.body).toEqual({ error: "Internal server error." });
     });
   });
 
@@ -104,6 +124,26 @@ describe("User Routes", () => {
       expect(res.status).toBe(409);
       expect(res.body).toEqual({ error: "Email already exists" });
     });
+
+    it("should return 400 if invalid user ID", async () => {
+      const res = await request(app)
+        .put("/api/users/abc")
+        .send({ name: "John", email: "john@example.com" });
+
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ error: "Invalid user ID." });
+    });
+
+    it("should return 500 for generic error", async () => {
+      (userService.updaterUser as jest.Mock).mockRejectedValue(new Error("Oops"));
+
+      const res = await request(app)
+        .put("/api/users/1")
+        .send({ name: "John", email: "john@example.com" });
+
+      expect(res.status).toBe(500);
+      expect(res.body).toEqual({ error: "Internal server error." });
+    });
   });
 
   describe("PUT /api/users/:id/password", () => {
@@ -143,6 +183,26 @@ describe("User Routes", () => {
 
       expect(res.status).toBe(404);
       expect(res.body).toEqual({ error: "User not found." });
+    });
+
+    it("should return 500 for generic error", async () => {
+      (userService.updateUserPassword as jest.Mock).mockRejectedValue(new Error("Oops"));
+
+      const res = await request(app)
+        .put("/api/users/1/password")
+        .send({ oldPassword: "oldPass123", newPassword: "newPass456" });
+
+      expect(res.status).toBe(500);
+      expect(res.body).toEqual({ error: "Internal server error." });
+    });
+
+    it("should return 400 if invalid user ID", async () => {
+      const res = await request(app)
+        .put("/api/users/abc/password")
+        .send({ oldPassword: "oldPass123", newPassword: "newPass456" });
+
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ error: "Invalid user ID." }); // controller currently returns 500 for NaN
     });
   });
 });

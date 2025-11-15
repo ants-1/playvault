@@ -94,7 +94,7 @@ export const updateProduct = async (req: Request, res: Response) => {
   try {
     const id: number = parseInt(req.params.id);
 
-    if (id == null) {
+    if (!id || isNaN(id)) {
       return res.status(400).json({ error: "Invalid product ID." });
     }
 
@@ -143,7 +143,7 @@ export const deleteProduct = async (req: Request, res: Response) => {
   try {
     const id: number = parseInt(req.params.id);
 
-    if (id == null) {
+    if (!id || isNaN(id)) {
       return res.status(400).json({ error: "Invalid product ID." });
     }
 

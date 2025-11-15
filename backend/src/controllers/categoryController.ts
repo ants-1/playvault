@@ -34,7 +34,7 @@ export const getCategory = async (req: Request, res: Response) => {
   try {
     const id: number = parseInt(req.params.id);
 
-    if (id == null) {
+    if (isNaN(id)) {
       return res.status(400).json({ error: "Invalid category ID." });
     }
 
@@ -89,7 +89,7 @@ export const updateCategory = async (req: Request, res: Response) => {
   try {
     const id: number = parseInt(req.params.id);
 
-    if (id == null) {
+    if (isNaN(id)) {
       return res.status(400).json({ error: "Invalid category ID." });
     }
 
@@ -130,7 +130,7 @@ export const deleteCategory = async (req: Request, res: Response) => {
   try {
     const id: number = parseInt(req.params.id);
 
-    if (id == null) {
+    if (isNaN(id)) {
       return res.status(400).json({ error: "Invalid category ID." });
     }
 

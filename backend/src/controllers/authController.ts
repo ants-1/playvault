@@ -47,7 +47,6 @@ export const googleCallback = async (
     { session: false },
     async (error: Error, user: any) => {
       if (error || !user) {
-        console.error(error);
         return res.status(400).json({ error: "Google authentication failed:" });
       }
 
