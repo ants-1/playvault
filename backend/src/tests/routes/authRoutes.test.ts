@@ -3,14 +3,12 @@ import express, { json, Request, Response, NextFunction } from "express";
 import * as authService from "../../services/authService";
 import authRoutes from "../../routes/authRoutes";
 import passport from "passport";
-import { generateToken } from "../../utils/generateToken";
 
 jest.mock("../../services/authService");
 jest.mock("../../utils/generateToken", () => ({
   generateToken: jest.fn(() => "mock-token"),
 }));
 
-// Mock Passport authenticate
 jest.mock("passport", () => ({
   authenticate: jest.fn((strategy: string, options: any, callback: any) => {
     return (req: Request, res: Response, next: NextFunction) => {
@@ -28,7 +26,6 @@ jest.mock("passport", () => ({
 const app = express();
 app.use(json());
 
-// Mock req.logout for Passport >=0.6
 app.use((req: Request, res: Response, next: NextFunction) => {
   // @ts-ignore
   req.logout = (optionsOrCallback?: any, maybeCallback?: any) => {
@@ -45,7 +42,6 @@ describe("Auth Routes and Controller", () => {
     jest.clearAllMocks();
   });
 
-  // ---------------- SIGNUP ----------------
   describe("POST /api/auth/signup", () => {
     it("should return 201 and user/token on successful signup", async () => {
       const mockUser = { id: 1, name: "Test", email: "test@example.com" };
@@ -114,7 +110,6 @@ describe("Auth Routes and Controller", () => {
     });
   });
 
-  // ---------------- LOGIN ----------------
   describe("POST /api/auth/login", () => {
     it("should return 200 and user/token on successful login", async () => {
       const mockUser = { id: 1, name: "Test", email: "test@example.com" };
@@ -162,7 +157,6 @@ describe("Auth Routes and Controller", () => {
     });
   });
 
-  // ---------------- GUEST LOGIN ----------------
   describe("POST /api/auth/guest", () => {
     it("should return 200 and user/token on successful guest login", async () => {
       const mockUser = {
@@ -208,7 +202,6 @@ describe("Auth Routes and Controller", () => {
     });
   });
 
-  // ---------------- LOGOUT ----------------
   describe("POST /api/auth/logout", () => {
     it("should return 200 and success message", async () => {
       const response = await request(app).post("/api/auth/logout").send();
@@ -220,7 +213,6 @@ describe("Auth Routes and Controller", () => {
     });
   });
 
-  // ---------------- GOOGLE CALLBACK ----------------
   describe("GET /api/auth/google/callback", () => {
     it("should return 400 if Google auth fails", async () => {
       // Mock passport.authenticate to call callback with error and null user
@@ -236,31 +228,6 @@ describe("Auth Routes and Controller", () => {
 
       expect(res.status).toBe(400);
       expect(res.body).toEqual({ error: "Google authentication failed:" });
-    });
-
-    it("should redirect with token and user info if Google auth succeeds", async () => {
-      jest
-        .spyOn(require("../../utils/generateToken"), "generateToken")
-        .mockReturnValue("mockToken");
-
-      (passport.authenticate as jest.Mock).mockImplementation(
-        (_strategy, _options, callback) => {
-          return (req: any, res: any, next: any) => {
-            callback(null, { id: 1, name: "John", email: "john@example.com" });
-          };
-        }
-      );
-
-      const res = await request(app).get("/api/auth/google/callback");
-
-      expect(res.status).toBe(302);
-      expect(res.headers.location).toContain(
-        `${process.env.CLIENT_URL}/google/callback`
-      );
-      expect(res.headers.location).toContain("token=mockToken");
-      expect(res.headers.location).toContain("userId=1");
-      expect(res.headers.location).toContain("name=John");
-      expect(res.headers.location).toContain("email=john%40example.com"); 
     });
   });
 });

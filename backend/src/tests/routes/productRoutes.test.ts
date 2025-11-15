@@ -39,7 +39,6 @@ describe("Product Routes", () => {
       expect(res.status).toBe(400);
     });
 
-    // COVERAGE: products null branch
     it("returns 404 if no products found", async () => {
       (productService.getProducts as jest.Mock).mockResolvedValue(null);
       const res = await request(app).get("/api/products?page=1&limit=10");
@@ -75,7 +74,6 @@ describe("Product Routes", () => {
       expect(res.body.error).toBe("Invalid product ID.");
     });
 
-    // COVERAGE: ID = 0 branch
     it("returns 400 if ID is 0", async () => {
       const res = await request(app).get("/api/products/0");
       expect(res.status).toBe(400);
@@ -145,7 +143,6 @@ describe("Product Routes", () => {
       expect(res.body.error).toBe("Unexpected add error");
     });
 
-    // COVERAGE: addProduct returns null
     it("returns 400 if addProduct returns null", async () => {
       (productService.addProduct as jest.Mock).mockResolvedValue(null);
       const res = await request(app).post("/api/products").send({
@@ -196,7 +193,6 @@ describe("Product Routes", () => {
       expect(res.body.error).toBe("Invalid product ID.");
     });
 
-    // COVERAGE: id=null
     it("returns 400 if update ID is null", async () => {
       const res = await request(app).put("/api/products/null").send({ name: "X" });
       expect(res.status).toBe(400);
@@ -239,7 +235,6 @@ describe("Product Routes", () => {
       expect(res.body.error).toBe("Invalid product ID.");
     });
 
-    // COVERAGE: id=null branch
     it("returns 400 if delete ID is null", async () => {
       const res = await request(app).delete("/api/products/null");
       expect(res.status).toBe(400);

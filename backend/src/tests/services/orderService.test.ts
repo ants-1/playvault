@@ -188,7 +188,6 @@ describe("Order Service", () => {
     });
   });
 
-  // ------------------ NEW TESTS FOR FULL COVERAGE ------------------ //
   describe("getOrders - error handling", () => {
     it("throws if prisma.count fails", async () => {
       (prisma.order.findMany as jest.Mock).mockResolvedValue([mockOrder]);

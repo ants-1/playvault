@@ -8,9 +8,9 @@ describe("calculateOrderAmount", () => {
 
   it("should correctly calculate the total amount for multiple items", () => {
     const amount = calculateOrderAmount([
-      { price: 10, quantity: 2 },   // 20
-      { price: 5, quantity: 3 },    // 15
-      { price: 8, quantity: 1 },    // 8
+      { price: 10, quantity: 2 },   
+      { price: 5, quantity: 3 },    
+      { price: 8, quantity: 1 },   
     ]);
     expect(amount).toBe(43);
   });

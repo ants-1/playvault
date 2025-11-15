@@ -16,7 +16,6 @@ describe("Category Routes", () => {
     jest.clearAllMocks();
   });
 
-  // ================= GET /api/categories =================
   describe("GET /api/categories", () => {
     it("should return categories", async () => {
       const mockData = {
@@ -39,7 +38,6 @@ describe("Category Routes", () => {
     });
   });
 
-  // ================= GET /api/categories/:id =================
   describe("GET /api/categories/:id", () => {
     it("should return single category", async () => {
       const mockCategory = { id: 1, name: "Food" };
@@ -69,7 +67,6 @@ describe("Category Routes", () => {
     });
   });
 
-  // ================= POST /api/categories =================
   describe("POST /api/categories", () => {
     it("should create new category", async () => {
       const newCat = { id: 1, name: "New", description: "Desc", thumbnail: "" };
@@ -141,7 +138,6 @@ describe("Category Routes", () => {
     });
   });
 
-  // ================= PUT /api/categories/:id =================
   describe("PUT /api/categories/:id", () => {
     it("should update category", async () => {
       const updated = { id: 1, name: "Updated" };
@@ -195,7 +191,6 @@ describe("Category Routes", () => {
     });
   });
 
-  // ================= DELETE /api/categories/:id =================
   describe("DELETE /api/categories/:id", () => {
     it("should delete category", async () => {
       (categoryService.deleteCategory as jest.Mock).mockResolvedValue(

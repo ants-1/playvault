@@ -27,7 +27,6 @@ describe("categoryService", () => {
     (console.error as jest.Mock).mockRestore();
   });
 
-  // ---------------- getCategories ----------------
   describe("getCategories", () => {
     it("should return categories with pagination", async () => {
       const mockCategories = [{ id: 1, name: "Test Category" }];
@@ -57,7 +56,6 @@ describe("categoryService", () => {
       );
     });
 
-    // Additional coverage for console.error on unknown DB error
     it("should log error and throw on unknown DB error", async () => {
       (prisma.category.findMany as jest.Mock).mockRejectedValue(
         new Error("Random DB error")
@@ -73,7 +71,6 @@ describe("categoryService", () => {
     });
   });
 
-  // ---------------- getCategory ----------------
   describe("getCategory", () => {
     it("should return a category by id", async () => {
       const mockCategory = { id: 1, name: "Food" };
@@ -94,7 +91,6 @@ describe("categoryService", () => {
       );
     });
 
-    // Unknown error code coverage
     it("should throw generic error on unknown prisma error code", async () => {
       const error = { code: "UNKNOWN" };
       (prisma.category.findUniqueOrThrow as jest.Mock).mockRejectedValue(error);
@@ -109,7 +105,6 @@ describe("categoryService", () => {
     });
   });
 
-  // ---------------- addCategory ----------------
   describe("addCategory", () => {
     it("should create and return a new category", async () => {
       const mockCategory = { id: 1, name: "New Cat" };
@@ -132,7 +127,6 @@ describe("categoryService", () => {
       ).rejects.toThrow("Category name already exists.");
     });
 
-    // Generic error coverage
     it("should throw generic error on unknown create error", async () => {
       (prisma.category.create as jest.Mock).mockRejectedValue(
         new Error("Random create error")
@@ -148,7 +142,6 @@ describe("categoryService", () => {
     });
   });
 
-  // ---------------- updateCategory ----------------
   describe("updateCategory", () => {
     it("should update and return category", async () => {
       const updated = { id: 1, name: "Updated Cat" };
@@ -181,7 +174,6 @@ describe("categoryService", () => {
       ).rejects.toThrow("Category name already exists.");
     });
 
-    // Unknown error coverage
     it("should throw generic error on unknown update error", async () => {
       const error = { code: "UNKNOWN" };
       (prisma.category.update as jest.Mock).mockRejectedValue(error);
@@ -195,7 +187,6 @@ describe("categoryService", () => {
       );
     });
 
-    // Undefined optional params coverage
     it("should update category with undefined optional params", async () => {
       const updated = { id: 1, name: "Updated" };
       (prisma.category.update as jest.Mock).mockResolvedValue(updated);
@@ -205,7 +196,6 @@ describe("categoryService", () => {
     });
   });
 
-  // ---------------- deleteCategory ----------------
   describe("deleteCategory", () => {
     it("should delete and return category", async () => {
       const deleted = { id: 1, name: "Old Cat" };
@@ -224,7 +214,6 @@ describe("categoryService", () => {
       );
     });
 
-    // Unknown error coverage
     it("should throw generic error on unknown delete error", async () => {
       const error = { code: "UNKNOWN" };
       (prisma.category.delete as jest.Mock).mockRejectedValue(error);

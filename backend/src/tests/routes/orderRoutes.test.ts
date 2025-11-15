@@ -23,10 +23,6 @@ describe("Order Routes with Validation", () => {
   const mockOrder = { id: 1, customerId: 1 };
   const mockOrderDetail = { id: 1, productId: 1, quantity: 2 };
 
-  // -----------------------------
-  // EXISTING TESTS (UNCHANGED)
-  // -----------------------------
-
   describe("GET /api/orders", () => {
     it("returns paginated orders", async () => {
       (orderService.getOrders as jest.Mock).mockResolvedValue({
@@ -200,10 +196,6 @@ describe("Order Routes with Validation", () => {
       expect(res.body.message).toBe("Product removed from order");
     });
   });
-
-  // -------------------------------------------------
-  // NEW TESTS (FOR FULL CONTROLLER COVERAGE)
-  // -------------------------------------------------
 
   describe("FULL COVERAGE EXTRA TESTS", () => {
     it("GET /orders returns 404 when service returns null", async () => {
