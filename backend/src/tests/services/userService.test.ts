@@ -2,8 +2,6 @@ import bcrypt from "bcrypt";
 import { prisma } from "../../lib/prisma";
 import * as userService from "../../services/userService";
 import { User } from "../../../generated/prisma";
-import dotenv from "dotenv";
-dotenv.config();
 
 jest.mock("../../lib/prisma", () => ({
   prisma: {
