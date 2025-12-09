@@ -9,6 +9,8 @@ RUN npm install
 
 COPY . .
 
+RUN npx prisma generate
+
 RUN npm run build
 
 # Production stage
@@ -21,6 +23,8 @@ COPY package*.json ./
 RUN npm ci --only=production
 
 COPY --from=builder /app/dist ./dist
+
+COPY --from=builder /app/generated ./generated
 
 EXPOSE 4000
 
