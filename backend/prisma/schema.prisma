@@ -11,6 +11,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -64,7 +65,7 @@ model Order {
 }
 
 model OrderDetail {
-  id        Int   @id @default(autoincrement())
+  id        Int @id @default(autoincrement())
   orderId   Int
   productId Int
   quantity  Int
